@@ -1,0 +1,10 @@
+{
+    "electricity_tariff": 8.5,
+    "carbon_factor": 0.82,
+    "power_factor_threshold": 0.9,
+    "hvac_temp_threshold": 24.0,
+    "peak_load_multiplier": 1.5,
+    "idle_load_threshold_kw": 2.0,
+    "target_power_factor": 0.95,
+    "eei_benchmark": 0.15
+}

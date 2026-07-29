@@ -1,0 +1,155 @@
+2026-07-29 22:05:16,241 [INFO] config.logging: Logging configured successfully.
+2026-07-29 22:05:16,242 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:05:20,429 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:05:20,453 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:05:20,476 [INFO] services.data_service: Dataset successfully loaded and cached in memory.
+2026-07-29 22:05:20,528 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:05:20,554 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:05:20,613 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:05:32,108 [INFO] config.logging: Logging configured successfully.
+2026-07-29 22:05:32,111 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:05:34,264 [INFO] config.logging: Logging configured successfully.
+2026-07-29 22:05:34,268 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:05:36,850 [INFO] config.logging: Logging configured successfully.
+2026-07-29 22:05:36,852 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:05:37,263 [INFO] services.ml_service: ML Comparison Complete. Best model: Gradient Boosting with R²: 0.9642
+2026-07-29 22:05:37,285 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:05:39,529 [INFO] config.logging: Logging configured successfully.
+2026-07-29 22:05:39,530 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:05:39,564 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:05:41,212 [INFO] config.logging: Logging configured successfully.
+2026-07-29 22:05:41,214 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:05:41,227 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:05:41,239 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:05:41,357 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:06:01,109 [INFO] config.logging: Logging configured successfully.
+2026-07-29 22:06:01,109 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:06:01,116 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:06:01,118 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:06:01,187 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:06:04,516 [INFO] config.logging: Logging configured successfully.
+2026-07-29 22:06:04,519 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:06:08,313 [INFO] config.logging: Logging configured successfully.
+2026-07-29 22:06:08,314 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:06:11,630 [INFO] config.logging: Logging configured successfully.
+2026-07-29 22:06:11,634 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:06:12,116 [INFO] services.ml_service: ML Comparison Complete. Best model: Gradient Boosting with R²: 0.9642
+2026-07-29 22:06:12,147 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:06:15,891 [INFO] config.logging: Logging configured successfully.
+2026-07-29 22:06:15,895 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:06:15,982 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:06:19,304 [INFO] config.logging: Logging configured successfully.
+2026-07-29 22:06:19,305 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:06:19,314 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:06:19,317 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:06:19,395 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:06:58,617 [INFO] config.logging: Logging configured successfully.
+2026-07-29 22:06:58,619 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:06:58,629 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:06:58,631 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:06:58,690 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:07:02,436 [INFO] config.logging: Logging configured successfully.
+2026-07-29 22:07:02,437 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:07:02,448 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:07:02,450 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:07:02,534 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:07:06,964 [INFO] config.logging: Logging configured successfully.
+2026-07-29 22:07:06,966 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:07:06,990 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:07:07,005 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:07:07,065 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:07:31,367 [INFO] config.logging: Logging configured successfully.
+2026-07-29 22:07:31,368 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:07:35,105 [INFO] config.logging: Logging configured successfully.
+2026-07-29 22:07:35,122 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:07:45,839 [INFO] config.logging: Logging configured successfully.
+2026-07-29 22:07:45,841 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:07:46,374 [INFO] services.ml_service: ML Comparison Complete. Best model: Gradient Boosting with R²: 0.9642
+2026-07-29 22:07:46,399 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:07:49,344 [INFO] config.logging: Logging configured successfully.
+2026-07-29 22:07:49,346 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:07:49,390 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:07:51,407 [INFO] config.logging: Logging configured successfully.
+2026-07-29 22:07:51,408 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:07:51,416 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:07:51,418 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:07:51,540 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:07:58,541 [INFO] config.logging: Logging configured successfully.
+2026-07-29 22:07:58,550 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:07:58,609 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:07:58,631 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:08:02,240 [INFO] config.logging: Logging configured successfully.
+2026-07-29 22:08:02,241 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:08:02,248 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:08:02,249 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:08:07,494 [INFO] config.logging: Logging configured successfully.
+2026-07-29 22:08:07,496 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:08:07,507 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:08:07,509 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:08:15,613 [INFO] config.logging: Logging configured successfully.
+2026-07-29 22:08:15,614 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:08:15,621 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:08:15,622 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:08:19,115 [INFO] config.logging: Logging configured successfully.
+2026-07-29 22:08:19,118 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:08:19,133 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:08:19,134 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:08:37,055 [INFO] config.logging: Logging configured successfully.
+2026-07-29 22:08:37,056 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:08:37,069 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:08:37,090 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:08:37,140 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:08:40,801 [INFO] config.logging: Logging configured successfully.
+2026-07-29 22:08:40,804 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:08:40,816 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:08:40,827 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:08:40,864 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:08:45,415 [INFO] config.logging: Logging configured successfully.
+2026-07-29 22:08:45,417 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:08:45,427 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:08:45,439 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:08:45,482 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:17:40,614 [INFO] config.logging: Logging configured successfully.
+2026-07-29 22:17:40,615 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:17:40,622 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:17:40,636 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:17:40,679 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:36:39,022 [INFO] config.logging: Logging configured successfully.
+2026-07-29 22:36:39,023 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:36:39,033 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:36:39,049 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:36:39,092 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:36:41,713 [INFO] config.logging: Logging configured successfully.
+2026-07-29 22:36:41,720 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:36:44,703 [INFO] config.logging: Logging configured successfully.
+2026-07-29 22:36:44,704 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:36:45,265 [INFO] services.ml_service: ML Comparison Complete. Best model: Gradient Boosting with R²: 0.9642
+2026-07-29 22:36:45,297 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:36:47,440 [INFO] config.logging: Logging configured successfully.
+2026-07-29 22:36:47,443 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:36:47,491 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:36:50,039 [INFO] config.logging: Logging configured successfully.
+2026-07-29 22:36:50,042 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:36:50,069 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:36:57,374 [INFO] config.logging: Logging configured successfully.
+2026-07-29 22:36:57,377 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:36:57,386 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:36:59,521 [INFO] config.logging: Logging configured successfully.
+2026-07-29 22:36:59,522 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:36:59,529 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:37:01,855 [INFO] config.logging: Logging configured successfully.
+2026-07-29 22:37:01,858 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:37:01,866 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:37:15,171 [INFO] config.logging: Logging configured successfully.
+2026-07-29 22:37:15,172 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:37:15,183 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:37:15,200 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:37:15,236 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:37:18,620 [INFO] config.logging: Logging configured successfully.
+2026-07-29 22:37:18,622 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:37:18,635 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:37:18,653 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:37:18,706 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:37:20,612 [INFO] config.logging: Logging configured successfully.
+2026-07-29 22:37:20,613 [INFO] config.settings: Configuration settings loaded successfully from JSON.
+2026-07-29 22:37:20,664 [INFO] config.settings: Configuration settings loaded successfully from JSON.
