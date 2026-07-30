@@ -21,13 +21,9 @@ def _precompute_dashboard(csv_path: str):
     from services.data_service import _load_and_process_csv
     df = _load_and_process_csv(csv_path)
 
-    # Full 24-hour hourly totals for sparklines (shows correct day profile)
-    hourly_total = df.groupby('Hour')['Energy Consumption'].sum().reset_index().sort_values('Hour')
-    spark_base = hourly_total['Energy Consumption'].values.tolist()
-    # Hourly cost sparkline (proportional to energy)
-    spark_cost = [round(v * 8.5, 1) for v in spark_base]
-    # Hourly carbon sparkline
-    spark_carbon = [round(v * 0.82, 1) for v in spark_base]
+    # Hourly totals for sparklines
+    hourly_total = df.groupby("Hour")["Energy Consumption"].sum().values.tolist()
+    spark_base = hourly_total[:12] if len(hourly_total) >= 12 else hourly_total
 
     # Per-building hourly sparkline values
     bldg_hourly = {}
@@ -91,7 +87,7 @@ def _precompute_dashboard(csv_path: str):
         "total_floors":  df["Floor"].nunique() * df["Building"].nunique(),
     }
 
-    return spark_base, spark_cost, spark_carbon, bldg_hourly, bldg_summary, df_imp, equip_totals
+    return spark_base, bldg_hourly, bldg_summary, df_imp, equip_totals
 
 # ── Helper: ultra-fast SVG sparkline ──────────────────────────────────────────
 def _svg_sparkline(values: list, color: str, height: int = 45) -> str:
@@ -148,7 +144,7 @@ def render_dashboard() -> None:
     alerts   = alert_svc.scan_for_alerts()
 
     # Use cached precomputed data instead of re-computing on every rerun
-    spark_base, spark_cost, spark_carbon, bldg_hourly, bldg_summary, df_imp, equip_totals = \
+    spark_base, bldg_hourly, bldg_summary, df_imp, equip_totals = \
         _precompute_dashboard(data_svc.csv_path)
 
     SHORT = {
@@ -177,55 +173,39 @@ def render_dashboard() -> None:
     </div>
     """, unsafe_allow_html=True)
 
-    # -- ALL 8 KPI Cards in ONE st.markdown call ---------------------------
-    # Each st.markdown is a separate WebSocket message. 
-    # Batching 8 -> 1 is the key performance fix.
+    # ── ROW 1 KPI Cards ───────────────────────────────────────────────────────
+    c1, c2, c3, c4 = st.columns(4, gap="medium")
     total_kw   = round(kpis["total_energy_kwh"] / 24, 1)
     daily_kwh  = round(kpis["total_energy_kwh"], 1)
     total_cost = round(kpis["total_cost_inr"], 0)
     peak_kw    = round(kpis["peak_load_kw"], 1)
+
+    with c1:
+        st.markdown(_kpi_card("⚡","#ECFDF5",f"{total_kw}","kW","Total Campus Consumption","2.4%",True) + _svg_sparkline(spark_base, "#059669"), unsafe_allow_html=True)
+    with c2:
+        st.markdown(_kpi_card("📅","#F0FDF4",f"{daily_kwh:,.1f}","kWh","Today's Energy Usage","1.8%",True) + _svg_sparkline(spark_base, "#10B981"), unsafe_allow_html=True)
+    with c3:
+        st.markdown(_kpi_card("₹","#FFFBEB",f"₹{total_cost:,.0f}","","Today's Electricity Cost","1.8%",True) + _svg_sparkline(spark_base, "#F59E0B"), unsafe_allow_html=True)
+    with c4:
+        st.markdown(_kpi_card("📈","#FEF2F2",f"{peak_kw}","kW","Peak Demand","0.6%",False) + _svg_sparkline(spark_base, "#EF4444"), unsafe_allow_html=True)
+
+    # ── ROW 2 KPI Cards ───────────────────────────────────────────────────────
+    c5, c6, c7, c8 = st.columns(4, gap="medium")
     total_carbon  = round(kpis["total_carbon_kg"], 1)
     health_score  = health["overall_score"]
     num_buildings = equip_totals["num_buildings"]
     total_floors  = equip_totals["total_floors"]
 
-    def _kc(icon, bg, val, unit, label, delta, up):
-        arrow = "&#8593;" if up else "&#8595;"
-        clr = "#10B981" if up else "#EF4444"
-        dbg = "#ECFDF5" if up else "#FEF2F2"
-        return (
-            f'<div style="background:#fff;border-radius:16px;padding:18px 20px;\'
-            f'border:1px solid #E2E8F0;box-shadow:0 2px 8px rgba(0,0,0,0.04);">\'
-            f'<div style="display:flex;justify-content:space-between;margin-bottom:10px;">\'
-            f'<div style="background:{bg};width:34px;height:34px;border-radius:10px;\'
-            f'display:flex;align-items:center;justify-content:center;font-size:1rem;">{icon}</div>\'
-            f'<span style="background:{dbg};color:{clr};padding:2px 8px;border-radius:10px;\'
-            f'font-size:0.78rem;font-weight:700;">{arrow} {delta}</span></div>\'
-            f'<div style="font-size:2rem;font-weight:800;color:#022C22;line-height:1.1;">{val}\'
-            f'<span style="font-size:0.9rem;font-weight:500;color:#64748B;margin-left:2px;">{unit}</span></div>\'
-            f'<div style="font-size:0.82rem;color:#64748B;margin-top:4px;font-weight:500;">{label}</div></div>'
-        )
-
-    row1 = (
-        _kc("&#9889;","#ECFDF5", total_kw, "kW", "Avg Campus Demand", "2.4%", True) +
-        _kc("&#128197;","#F0FDF4", f"{daily_kwh:,.1f}", "kWh", "Total Energy Today", "1.8%", True) +
-        _kc("&#8377;","#FFFBEB", f"&#8377;{total_cost:,.0f}", "", "Electricity Cost", "1.8%", True) +
-        _kc("&#128200;","#FEF2F2", peak_kw, "kW", "Peak Demand", "0.6%", False)
-    )
-    row2 = (
-        _kc("&#127807;","#F0FDF4", f"{total_carbon:,.1f}", "kg", "Carbon Emissions", "1.8%", True) +
-        _kc("&#127919;","#F5F3FF", health_score, "%", "Campus Health Score", "0.5%", True) +
-        _kc("&#127970;","#ECFDF5", num_buildings, f"/ {num_buildings}", "Active Buildings", "0%", True) +
-        _kc("&#128208;","#ECFDF5", total_floors, f"/ {total_floors}", "Active Floors", "0%", True)
-    )
-    st.markdown(
-        f'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:14px;">{row1}</div>\'
-        f'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:14px;">{row2}</div>',
-        unsafe_allow_html=True
-    )
+    with c5:
+        st.markdown(_kpi_card("🌿","#F0FDF4",f"{total_carbon:,.1f}","CO₂ kg","Carbon Emissions","1.8%",True) + _svg_sparkline(spark_base, "#10B981"), unsafe_allow_html=True)
+    with c6:
+        st.markdown(_kpi_card("🎯","#F5F3FF",f"{health_score}","%","Campus Efficiency","0.5%",True) + _svg_sparkline([60,62,65,63,68,70,72,70,68,72,75,73], "#8B5CF6"), unsafe_allow_html=True)
+    with c7:
+        st.markdown(_kpi_card("🏢","#ECFDF5",f"{num_buildings}",f"/ {num_buildings}","Active Buildings","0%",True) + _svg_sparkline([6]*12, "#059669"), unsafe_allow_html=True)
+    with c8:
+        st.markdown(_kpi_card("📐","#ECFDF5",f"{total_floors}",f"/ {total_floors}","Active Floors","0%",True) + _svg_sparkline(list(range(10, 22)), "#06B6D4"), unsafe_allow_html=True)
 
     st.markdown("---")
-
 
     # ── Digital Campus View ───────────────────────────────────────────────────
     st.markdown("""

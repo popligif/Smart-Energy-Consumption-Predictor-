@@ -1,5 +1,5 @@
 {
-    "electricity_tariff": 3.0,
+    "electricity_tariff": 1.0,
     "carbon_factor": 0.82,
     "power_factor_threshold": 0.91,
     "hvac_temp_threshold": 26.0,
