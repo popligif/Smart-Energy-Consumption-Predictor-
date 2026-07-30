@@ -3,7 +3,7 @@ Main application router and entry point.
 MIET Smart Campus Energy Intelligence & Decision Support System
 """
 import streamlit as st
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from config.logging import setup_logging
 from config.settings import ConfigSettings
 
@@ -99,6 +99,28 @@ from ui.recommendations import render_recommendations
 from ui.alerts import render_alerts
 from ui.reports import render_reports
 from ui.settings import render_settings
+from ui.future_works import render_future_works
+
+# ── Role-Based Page Access ────────────────────────────────────────────────────
+ALL_PAGES = [
+    "🏛️ Executive Decision Centre",
+    "⚡ Energy Analytics",
+    "🔮 Scenario Simulator",
+    "🔌 Load Optimization",
+    "💡 AI Recommendations",
+    "🔔 Smart Alerts",
+    "🔍 Telemetry Explorer",
+    "📄 Executive Report",
+    "⚙️ Settings",
+    "🔮 Future Integrations",
+]
+
+ROLE_PAGES = {
+    "Director": ALL_PAGES,
+    "Energy Manager": ALL_PAGES,
+    "Electrical Engineer": ALL_PAGES,
+    "Administrator": ALL_PAGES,
+}
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 with st.sidebar:
@@ -129,19 +151,12 @@ with st.sidebar:
 
     st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
 
+    # Show only pages allowed for the current role
+    visible_pages = ROLE_PAGES.get(selected_role, ALL_PAGES)
+
     selected_page = st.radio(
         "Navigation",
-        options=[
-            "🏛️ Director Decision Centre",
-            "⚡ Energy Analytics",
-            "🔮 Scenario Simulator",
-            "🔌 Load Optimization",
-            "💡 AI Recommendations",
-            "🔔 Smart Alerts",
-            "🔍 Telemetry Explorer",
-            "📄 Executive Report",
-            "⚙️ Settings",
-        ],
+        options=visible_pages,
         label_visibility="collapsed",
         key="nav_radio"
     )
@@ -154,7 +169,9 @@ with st.sidebar:
     """, unsafe_allow_html=True)
 
 # ── Navbar (rendered OUTSIDE sidebar context, directly in main area) ──────────
-now = datetime.now().strftime("%I:%M:%S %p  %A, %d %b %Y")
+# Use IST timezone (UTC+05:30) for correct time display
+IST = timezone(timedelta(hours=5, minutes=30))
+now = datetime.now(IST).strftime("%I:%M:%S %p  %A, %d %b %Y")
 
 # Use a st.container so the navbar is guaranteed to be the first element in main
 with st.container():
@@ -212,7 +229,7 @@ with st.container():
 
 # ── Router ────────────────────────────────────────────────────────────────────
 try:
-    if selected_page == "🏛️ Director Decision Centre":
+    if selected_page == "🏛️ Executive Decision Centre":
         render_dashboard()
     elif selected_page == "⚡ Energy Analytics":
         render_analytics()
@@ -230,6 +247,8 @@ try:
         render_reports()
     elif selected_page == "⚙️ Settings":
         render_settings()
+    elif selected_page == "🔮 Future Integrations":
+        render_future_works()
 except Exception as e:
     st.error(f"🛑 Application Error: {e}")
     st.exception(e)

@@ -1,5 +1,5 @@
 """
-Director Decision Centre — Fixed version:
+Executive Decision Centre — Fixed version:
 - Unique keys for all plotly_chart calls (fixes StreamlitDuplicateElementId)
 - Navbar rendered inside the page (fixes header not visible)
 - Building power breakdown section added
@@ -374,8 +374,7 @@ def render_dashboard() -> None:
     ws_kw       = bstats.get("avg_workshop", 0)
     pcs_kw      = round(bstats.get("avg_pcs", 0) * 0.15, 2)   # ~150W per PC
     acs_kw      = round(bstats.get("avg_acs", 0) * 1.5, 2)    # ~1.5kW per AC ton
-    coe_kw      = round(bdf_sel["CoE Activity"].mean(), 2)
-    equip_kw    = round(bdf_sel["Equipment Usage"].mean(), 2)
+
 
     total_breakdown = lighting_kw + hvac_kw + lab_kw + ws_kw + pcs_kw + acs_kw + coe_kw + equip_kw
     total_breakdown = max(total_breakdown, 0.1)

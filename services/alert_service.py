@@ -102,6 +102,41 @@ class AlertService:
                     )
                 })
                 
+            # Rule 5: Vacant Room — Camera Feed Triggered Guard Alert
+            # Simulates smart camera occupancy detection: room nearly empty but ACs/lights still on
+            lighting_load = row.get("Lighting Load", 0)
+            floor = row.get("Floor", "Unknown")
+            if occupancy <= 2 and (running_acs > 0 or lighting_load > 0.5):
+                devices_on = []
+                if running_acs > 0:
+                    devices_on.append(f"{running_acs} AC unit(s)")
+                if lighting_load > 0.5:
+                    devices_on.append(f"Lighting ({lighting_load:.2f} kW)")
+                devices_str = " and ".join(devices_on)
+
+                alerts.append({
+                    "Timestamp": timestamp,
+                    "Building": building,
+                    "Hour": hour,
+                    "Floor": floor,
+                    "Severity": "Critical",
+                    "Category": "Vacant Room — Guard Alert",
+                    "Parameter": f"Occupancy: {occupancy} | {devices_str} still ON",
+                    "Threshold": "Occupancy ≤ 2 with active loads",
+                    "Message": (
+                        f"🎥 **Camera Feed Alert:** Room on **Floor {floor}, {building}** detected "
+                        f"near-vacant (Occupancy: {occupancy}) at Hour {hour}:00, but {devices_str} "
+                        f"are still running. Immediate manual shutdown required."
+                    ),
+                    "Guard_Action": (
+                        f"📢 **Guard Dispatch Order:** Security personnel assigned to **Floor {floor} "
+                        f"of {building}** — proceed to the nearest vacant room and manually switch off "
+                        f"{devices_str}. Confirm shutdown via intercom/app within 15 minutes. "
+                        f"If room remains occupied by ≤ 2 persons, verify with department coordinator "
+                        f"before shutting down equipment."
+                    ),
+                })
+
         # Sort alerts: Critical first, then Warning, then by timestamp descending
         severity_order = {"Critical": 0, "Warning": 1, "Info": 2}
         return sorted(alerts, key=lambda x: (severity_order.get(x["Severity"], 2), x["Timestamp"]), reverse=True)

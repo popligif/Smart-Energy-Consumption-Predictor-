@@ -62,6 +62,21 @@ THRESHOLD_RATIONALE = {
             "Load sharing: Route 30% of Workshop Building load to Block D feeder during surge hours. "
             "Alert energy manager to manually shed non-critical AC units in vacant floors."
         )
+    },
+    "Vacant Room — Camera Feed Detection (Occupancy ≤ 2)": {
+        "basis": "IEA ZEB Protocol & ECBC 2017 (Energy Conservation Building Code India) — Occupancy-Based Load Control",
+        "significance": (
+            "Smart camera or PIR sensor feed detects near-vacant rooms (≤ 2 persons) where ACs, fans, or "
+            "lighting circuits remain energised. This phantom load wastes 0.5–3 kW per room per hour. "
+            "Across 6 buildings × 3 floors, even 10% of rooms left unattended during off-hours can add "
+            "15–45 kWh/day of avoidable consumption — equivalent to ₹120–360/day at current tariffs."
+        ),
+        "hybrid_action": (
+            "Deploy IoT occupancy-linked relay control via smart MCBs. Until automation is installed, "
+            "the system generates real-time Guard Dispatch Alerts — security personnel are notified with "
+            "building, floor, and device details to manually shut down loads within 15 minutes. "
+            "Battery backup covers only essential security and server loads during guard response window."
+        )
     }
 }
 
@@ -258,6 +273,10 @@ def render_alerts() -> None:
                 f"Battery can supply 30 kW for 4 hours — enough to shave the peak at Hour {hour} entirely."
             )
 
+        # Check for Guard Alert category
+        guard_action = alert.get("Guard_Action", "")
+        is_guard_alert = cat == "Vacant Room — Guard Alert"
+
         # Compute potential savings
         pf_val = df[df["Building"]==bldg]["Power Factor"].mean()
         energy_val = df[df["Building"]==bldg]["Energy Consumption"].mean()
@@ -322,7 +341,37 @@ def render_alerts() -> None:
               </div>
             </div>
           </div>
+        """, unsafe_allow_html=True)
 
+        # Render Guard Dispatch card if applicable
+        if is_guard_alert and guard_action:
+            floor_val = alert.get("Floor", "?")
+            st.markdown(f"""
+          <div style="background:#FFF7ED;border:2px solid #F97316;border-radius:10px;
+                      padding:16px;margin:-8px 0 12px 0;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+              <div style="background:#F97316;color:white;width:36px;height:36px;border-radius:10px;
+                          display:flex;align-items:center;justify-content:center;font-size:1.1rem;">🛡️</div>
+              <div>
+                <div style="font-size:0.88rem;font-weight:700;color:#9A3412;">Guard Dispatch Order</div>
+                <div style="font-size:0.72rem;color:#C2410C;">Auto-generated from camera feed · Floor {floor_val}, {bldg}</div>
+              </div>
+            </div>
+            <div style="font-size:0.82rem;color:#7C2D12;line-height:1.6;">
+              {guard_action}
+            </div>
+            <div style="display:flex;gap:12px;margin-top:12px;font-size:0.75rem;">
+              <span style="background:#FDBA74;color:#7C2D12;padding:3px 12px;
+                           border-radius:16px;font-weight:700;">⏱ Response: 15 min</span>
+              <span style="background:#FED7AA;color:#9A3412;padding:3px 12px;
+                           border-radius:16px;font-weight:600;">📍 Floor {floor_val} · {bldg}</span>
+              <span style="background:#FFEDD5;color:#C2410C;padding:3px 12px;
+                           border-radius:16px;font-weight:600;">📷 Camera Verified</span>
+            </div>
+          </div>
+            """, unsafe_allow_html=True)
+
+        st.markdown(f"""
           <!-- Financial Impact -->
           <div style="display:flex;gap:20px;font-size:0.78rem;background:white;
                       border-radius:8px;padding:10px 14px;border:1px solid #E2E8F0;">
@@ -338,3 +387,4 @@ def render_alerts() -> None:
           </div>
         </div>
         """, unsafe_allow_html=True)
+
