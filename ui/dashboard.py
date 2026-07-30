@@ -98,7 +98,7 @@ def _sparkline(values: list, color: str, chart_key: str, height: int = 50) -> No
         r, g, b = int(color[1:3],16), int(color[3:5],16), int(color[5:7],16)
         fill_color = f"rgba({r},{g},{b},0.12)"
     except Exception:
-        fill_color = "rgba(59,130,246,0.12)"
+        fill_color = "rgba(5,150,105,0.12)"
     fig.add_trace(go.Scatter(
         y=values, mode="lines",
         line=dict(color=color, width=2, shape="spline"),
@@ -178,8 +178,8 @@ def render_dashboard() -> None:
     peak_kw    = round(kpis["peak_load_kw"], 1)
 
     with c1:
-        st.markdown(_kpi_card("⚡","#EFF6FF",f"{total_kw}","kW","Total Campus Consumption","2.4%",True), unsafe_allow_html=True)
-        _sparkline(spark_base, "#3B82F6", "spark_c1")
+        st.markdown(_kpi_card("⚡","#ECFDF5",f"{total_kw}","kW","Total Campus Consumption","2.4%",True), unsafe_allow_html=True)
+        _sparkline(spark_base, "#059669", "spark_c1")
     with c2:
         st.markdown(_kpi_card("📅","#F0FDF4",f"{daily_kwh:,.1f}","kWh","Today's Energy Usage","1.8%",True), unsafe_allow_html=True)
         _sparkline(spark_base, "#10B981", "spark_c2")
@@ -204,8 +204,8 @@ def render_dashboard() -> None:
         st.markdown(_kpi_card("🎯","#F5F3FF",f"{health_score}","%","Campus Efficiency","0.5%",True), unsafe_allow_html=True)
         _sparkline([60,62,65,63,68,70,72,70,68,72,75,73], "#8B5CF6", "spark_c6")
     with c7:
-        st.markdown(_kpi_card("🏢","#EFF6FF",f"{num_buildings}",f"/ {num_buildings}","Active Buildings","0%",True), unsafe_allow_html=True)
-        _sparkline([6]*12, "#3B82F6", "spark_c7")
+        st.markdown(_kpi_card("🏢","#ECFDF5",f"{num_buildings}",f"/ {num_buildings}","Active Buildings","0%",True), unsafe_allow_html=True)
+        _sparkline([6]*12, "#059669", "spark_c7")
     with c8:
         st.markdown(_kpi_card("📐","#ECFDF5",f"{total_floors}",f"/ {total_floors}","Active Floors","0%",True), unsafe_allow_html=True)
         _sparkline(list(range(10, 22)), "#06B6D4", "spark_c8")
@@ -267,7 +267,7 @@ def render_dashboard() -> None:
                                  padding:2px 8px;border-radius:12px;font-weight:600;">
                       {sl} · {pct}%
                     </span>
-                    <span style="font-size:0.75rem;color:#3B82F6;font-weight:500;">Floors →</span>
+                    <span style="font-size:0.75rem;color:#059669;font-weight:500;">Floors →</span>
                   </div>
                   <div style="height:4px;background:#F1F5F9;border-radius:4px;margin-top:8px;">
                     <div style="height:4px;background:{sc};border-radius:4px;
@@ -342,7 +342,7 @@ def render_dashboard() -> None:
                               font-size:0.72rem;color:#64748B;margin-top:4px;">
                     <span>🔶 {kw} kW</span>
                     <span>PF {pf:.2f}</span>
-                    <span style="color:#3B82F6;font-weight:500;">Floors ↑</span>
+                    <span style="color:#059669;font-weight:500;">Floors ↑</span>
                   </div>
                 </div>
                 """, unsafe_allow_html=True)
@@ -382,7 +382,7 @@ def render_dashboard() -> None:
     breakdown_data = {
         "Component":   ["HVAC / ACs",   "Lighting",   "Computers (PCs)", "Laboratories", "Workshop Equip.", "CoE Research", "Other Equip."],
         "Load (kW)":   [hvac_kw, lighting_kw, pcs_kw, lab_kw, ws_kw, coe_kw, equip_kw],
-        "Color":       ["#3B82F6","#F59E0B","#10B981","#8B5CF6","#F97316","#06B6D4","#94A3B8"]
+        "Color":       ["#059669","#F59E0B","#10B981","#8B5CF6","#F97316","#06B6D4","#94A3B8"]
     }
     df_breakdown = pd.DataFrame(breakdown_data)
     df_breakdown["% Share"] = (df_breakdown["Load (kW)"] / total_breakdown * 100).round(1)
@@ -437,12 +437,12 @@ def render_dashboard() -> None:
         top_component = df_breakdown.iloc[0] if not df_breakdown.empty else None
         if top_component is not None:
             st.markdown(f"""
-            <div style="background:#EFF6FF;border-left:4px solid #3B82F6;
+            <div style="background:#ECFDF5;border-left:4px solid #059669;
                         padding:10px 14px;border-radius:6px;margin-top:8px;">
-              <span style="font-size:0.8rem;color:#1D4ED8;font-weight:600;">
+              <span style="font-size:0.8rem;color:#047857;font-weight:600;">
                 💡 Key Driver:
               </span>
-              <span style="font-size:0.8rem;color:#1E40AF;">
+              <span style="font-size:0.8rem;color:#064E3B;">
                 <b>{top_component['Component']}</b> contributes
                 <b>{top_component['% Share']}%</b> of total building consumption
                 ({top_component['Load (kW)']:.2f} kW). This is the primary target
@@ -559,7 +559,7 @@ def render_dashboard() -> None:
             labels=["Grid", "Solar", "Diesel"],
             values=[100, 0.1, 0.1],
             hole=0.72,
-            marker_colors=["#3B82F6","#F59E0B","#10B981"],
+            marker_colors=["#059669","#F59E0B","#10B981"],
             textinfo="none"
         ))
         fig_donut.update_layout(
@@ -597,7 +597,7 @@ def render_dashboard() -> None:
             </div>"""
         st.markdown(
             '<div class="kpi-card"><div style="font-weight:600;color:#0F172A;margin-bottom:14px;">Live Dispatch</div>' +
-            drow("⚡","Grid Supply",grid_kw,"100% of load · Import limit 500 kW","#3B82F6",100) +
+            drow("⚡","Grid Supply",grid_kw,"100% of load · Import limit 500 kW","#059669",100) +
             drow("☀️","Solar Generation",0.0,"0% of load · 80 kW capacity available","#F59E0B",0) +
             drow("🔋","Diesel Generator",0.0,"Standby — grid sufficient","#6B7280",0) +
             f"""<div>
@@ -683,10 +683,10 @@ def render_dashboard() -> None:
           <div style="display:flex;justify-content:space-between;
                       margin-bottom:4px;font-size:0.84rem;">
             <span style="color:#64748B;">Active (Running) Load</span>
-            <span style="font-weight:700;color:#3B82F6;">{active_kw} kW</span>
+            <span style="font-weight:700;color:#059669;">{active_kw} kW</span>
           </div>
           <div style="height:6px;background:#F1F5F9;border-radius:4px;margin-bottom:8px;">
-            <div style="height:6px;background:#3B82F6;border-radius:4px;
+            <div style="height:6px;background:#059669;border-radius:4px;
                          width:{utilisation}%;"></div>
           </div>
           <div style="display:flex;justify-content:space-between;font-size:0.84rem;">

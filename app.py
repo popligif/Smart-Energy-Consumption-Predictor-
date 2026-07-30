@@ -20,68 +20,104 @@ st.set_page_config(
 # ── Global CSS Design System ──────────────────────────────────────────────────
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-html, body, [class*="css"] { font-family: 'Inter', sans-serif !important; }
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+html, body, [class*="css"] { font-family: 'Outfit', sans-serif !important; }
 
-/* Page background */
+/* Dynamic Background & Spacing */
 .main .block-container {
     padding-top: 0 !important;
-    padding-left: 2rem !important;
-    padding-right: 2rem !important;
-    padding-bottom: 2rem !important;
+    padding-left: 2.5rem !important;
+    padding-right: 2.5rem !important;
+    padding-bottom: 3rem !important;
     max-width: 100% !important;
-    background: #F0F4F8;
+    background: #F8FAFC;
+    background-image: radial-gradient(#E2E8F0 1px, transparent 1px);
+    background-size: 24px 24px;
 }
-.main { background-color: #F0F4F8 !important; }
+.main { background-color: #F8FAFC !important; }
 
-/* Sidebar */
+/* Premium Glassmorphic Sidebar */
 section[data-testid="stSidebar"] {
-    background: linear-gradient(180deg, #0F172A 0%, #1E293B 100%) !important;
-    border-right: 1px solid #334155 !important;
+    background: linear-gradient(160deg, #022C22 0%, #064E3B 100%) !important;
+    border-right: 1px solid rgba(255,255,255,0.05) !important;
+    box-shadow: 4px 0 24px rgba(2, 44, 34, 0.4);
 }
 section[data-testid="stSidebar"] > div { background: transparent !important; }
-section[data-testid="stSidebar"] * { color: #CBD5E1 !important; }
-section[data-testid="stSidebar"] .stSelectbox label,
-section[data-testid="stSidebar"] .stRadio label { color: #94A3B8 !important; }
+section[data-testid="stSidebar"] * { color: #A7F3D0 !important; }
+section[data-testid="stSidebar"] hr { border-top-color: rgba(167, 243, 208, 0.2) !important; }
 
-/* Card styles used across all pages */
+/* Sidebar Navigation Radios styled as pills */
+section[data-testid="stSidebar"] .stRadio > div { gap: 4px; }
+section[data-testid="stSidebar"] .stRadio label {
+    background: rgba(255,255,255,0.03);
+    padding: 10px 16px;
+    border-radius: 12px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+section[data-testid="stSidebar"] .stRadio label:hover {
+    background: rgba(16, 185, 129, 0.15);
+    transform: translateX(4px);
+}
+section[data-testid="stSidebar"] .stRadio div[data-testid="stMarkdownContainer"] p {
+    font-size: 0.95rem; font-weight: 500; color: #D1FAE5 !important;
+}
+
+/* Stunning KPI Cards with Micro-animations */
 .kpi-card {
-    background: white;
-    border-radius: 16px;
-    padding: 20px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 4px 12px rgba(0,0,0,0.04);
-    border: 1px solid #F1F5F9;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(12px);
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    border: 1px solid rgba(255,255,255,0.8);
     height: 100%;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+.kpi-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+    background: linear-gradient(90deg, #10B981, #059669);
+    opacity: 0; transition: opacity 0.3s ease;
 }
 .kpi-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.09);
+    transform: translateY(-5px);
+    box-shadow: 0 20px 25px -5px rgba(5, 150, 105, 0.1), 0 10px 10px -5px rgba(5, 150, 105, 0.04);
 }
+.kpi-card:hover::before { opacity: 1; }
+
 .building-card {
     background: white;
     border-radius: 16px;
     padding: 18px 20px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.03);
     border: 1px solid #F1F5F9;
-    border-top: 3px solid #10B981;
-    margin-bottom: 4px;
+    border-left: 4px solid #10B981;
+    margin-bottom: 8px;
+    transition: transform 0.2s;
 }
+.building-card:hover { transform: scale(1.01); }
+
 .equip-card {
-    background: white;
-    border-radius: 12px;
+    background: linear-gradient(135deg, #ffffff, #f8fafc);
+    border-radius: 14px;
     padding: 18px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+    border: 1px solid #e2e8f0;
     text-align: center;
 }
-.delta-up   { color: #10B981; font-weight: 600; font-size: 0.78rem; }
-.delta-down { color: #EF4444; font-weight: 600; font-size: 0.78rem; }
-.metric-val { font-size: 2.0rem; font-weight: 800; color: #0F172A; line-height: 1.1; }
-.metric-sub { font-size: 0.78rem; color: #94A3B8; margin-top: 2px; }
 
-/* Remove extra gaps */
-div[data-testid="stVerticalBlock"] > div { gap: 0.5rem !important; }
-div[data-testid="stHorizontalBlock"] { gap: 1rem !important; }
+/* Typography Enhancements */
+.delta-up   { color: #10B981; font-weight: 700; font-size: 0.85rem; background: #ECFDF5; padding: 2px 8px; border-radius: 12px; }
+.delta-down { color: #EF4444; font-weight: 700; font-size: 0.85rem; background: #FEF2F2; padding: 2px 8px; border-radius: 12px; }
+.metric-val { font-size: 2.4rem; font-weight: 800; color: #022C22; line-height: 1.1; letter-spacing: -0.02em; }
+.metric-sub { font-size: 0.85rem; color: #64748B; margin-top: 4px; font-weight: 500; }
+
+/* Remove extra gaps & Fix Streamlit defaults */
+div[data-testid="stVerticalBlock"] > div { gap: 0.8rem !important; }
+div[data-testid="stHorizontalBlock"] { gap: 1.2rem !important; }
+button[title="View fullscreen"] { display: none; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -150,9 +186,9 @@ with st.sidebar:
     st.markdown("""
     <div style="padding:20px 8px 12px 8px;text-align:center;">
         <div style="display:inline-flex;align-items:center;justify-content:center;
-                    background:linear-gradient(135deg,#3B82F6,#2563EB);
+                    background:linear-gradient(135deg,#059669,#047857);
                     width:50px;height:50px;border-radius:14px;
-                    font-size:1.4rem;margin-bottom:10px;box-shadow:0 4px 12px rgba(59,130,246,0.4);">
+                    font-size:1.4rem;margin-bottom:10px;box-shadow:0 4px 12px rgba(5,150,105,0.4);">
             ⚡
         </div>
         <div style="color:#F1F5F9;font-weight:800;font-size:1.1rem;letter-spacing:0.5px;">MIET</div>
@@ -214,16 +250,16 @@ with st.container():
     ">
         <div style="display:flex;align-items:center;gap:14px;">
             <div style="
-                background: linear-gradient(135deg,#3B82F6,#2563EB);
+                background: linear-gradient(135deg,#059669,#047857);
                 width: 42px; height: 42px; border-radius: 12px;
                 display: flex; align-items: center; justify-content: center;
                 font-size: 1.3rem;
-                box-shadow: 0 4px 10px rgba(59,130,246,0.35);
+                box-shadow: 0 4px 10px rgba(5,150,105,0.35);
             ">⚡</div>
             <div>
                 <div style="font-weight:800;color:#0F172A;font-size:1.0rem;
                              letter-spacing:0.3px;">MIET</div>
-                <div style="color:#3B82F6;font-size:0.78rem;font-weight:600;">
+                <div style="color:#059669;font-size:0.78rem;font-weight:600;">
                     Smart Campus Energy Management System
                 </div>
             </div>
@@ -241,9 +277,9 @@ with st.container():
                          border:1px solid #A7F3D0;">
                 ● Campus: Normal
             </span>
-            <span style="background:#EFF6FF;color:#2563EB;padding:5px 14px;
+            <span style="background:#ECFDF5;color:#047857;padding:5px 14px;
                          border-radius:20px;font-size:0.75rem;font-weight:700;
-                         border:1px solid #BFDBFE;">
+                         border:1px solid #A7F3D0;">
                 ⚡ Phase 1 · Live Monitoring
             </span>
         </div>

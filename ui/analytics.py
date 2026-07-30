@@ -64,7 +64,7 @@ def _hex_to_rgba(hex_color: str, alpha: float = 0.7) -> str:
         r, g, b = int(hex_color[1:3],16), int(hex_color[3:5],16), int(hex_color[5:7],16)
         return f"rgba({r},{g},{b},{alpha})"
     except Exception:
-        return f"rgba(59,130,246,{alpha})"
+        return f"rgba(5,150,105,{alpha})"
 
 def render_analytics() -> None:
     data_svc  = DataService()
@@ -79,7 +79,7 @@ def render_analytics() -> None:
     # ── Section Header ────────────────────────────────────────────────────────
     st.markdown("""
     <div class="section-header" style="margin-top:24px;">
-        <div class="section-icon" style="background:#EFF6FF;font-size:1.2rem;">📈</div>
+        <div class="section-icon" style="background:#ECFDF5;font-size:1.2rem;">📈</div>
         <div>
             <div style="font-size:1.4rem;font-weight:800;color:#0F172A;">Energy Analytics</div>
             <div style="color:#94A3B8;font-size:0.82rem;">
@@ -123,7 +123,7 @@ def render_analytics() -> None:
                 "axis": {"range": [0, campus_max_kw],
                          "tickfont": {"size": 9, "color": "#94A3B8"},
                          "tickwidth": 1},
-                "bar": {"color": "#3B82F6", "thickness": 0.25},
+                "bar": {"color": "#059669", "thickness": 0.25},
                 "bgcolor": "#F1F5F9",
                 "borderwidth": 0,
                 "steps": [
@@ -166,7 +166,7 @@ def render_analytics() -> None:
 
         # Meter bar
         bar_vals = [2,3,5,8,10,12,10,12,15,18,20,22,20,18,16,15,14,12,10,8,5,4,3,2]
-        bar_clrs = ["#3B82F6" if v < 15 else "#F59E0B" for v in bar_vals]
+        bar_clrs = ["#059669" if v < 15 else "#F59E0B" for v in bar_vals]
         fig_meter = go.Figure(go.Bar(
             x=list(range(24)), y=bar_vals,
             marker_color=bar_clrs, width=0.7
@@ -202,7 +202,7 @@ def render_analytics() -> None:
             orientation="h",
             marker=dict(
                 color=bldg_avg["Avg_kW"],
-                colorscale=[[0,"#BFDBFE"],[0.5,"#3B82F6"],[1.0,"#1D4ED8"]],
+                colorscale=[[0,"#A7F3D0"],[0.5,"#059669"],[1.0,"#047857"]],
                 showscale=False
             ),
             text=[f"{v:.1f}" for v in bldg_avg["Avg_kW"]],
@@ -231,7 +231,7 @@ def render_analytics() -> None:
             labels=dist_labels, values=dist_vals,
             hole=0.0, textinfo="percent",
             textfont_size=9,
-            marker_colors=["#3B82F6","#F59E0B","#10B981","#8B5CF6","#06B6D4","#EF4444","#94A3B8"]
+            marker_colors=["#059669","#F59E0B","#10B981","#8B5CF6","#06B6D4","#EF4444","#94A3B8"]
         ))
         fig_dist.update_layout(
             height=220, margin=dict(l=0,r=0,t=0,b=0),
@@ -259,9 +259,9 @@ def render_analytics() -> None:
         fig_trend.add_trace(go.Scatter(
             x=hourly_total["Hour"], y=hourly_total["Total_kW"],
             mode="lines", name="Total Campus",
-            line=dict(color="#3B82F6", width=2.5, shape="spline"),
+            line=dict(color="#059669", width=2.5, shape="spline"),
             fill="tozeroy",
-            fillcolor="rgba(59,130,246,0.1)"
+            fillcolor="rgba(5,150,105,0.1)"
         ))
         fig_trend.update_layout(
             height=200, margin=dict(l=0,r=0,t=0,b=0),
@@ -284,7 +284,7 @@ def render_analytics() -> None:
         </div>""", unsafe_allow_html=True)
 
         colors_map = {
-            "Academic Block A": "#3B82F6",
+            "Academic Block A": "#059669",
             "Academic Block B": "#10B981",
             "Academic Block C": "#F59E0B",
             "Academic Block D": "#8B5CF6",
@@ -297,7 +297,7 @@ def render_analytics() -> None:
             bdf = bldg_hourly.get(bldg)
             if not bdf: continue
             fill_mode = "tozeroy" if bldg == bldg_list[0] else "tonexty"
-            fill_rgba = _hex_to_rgba(colors_map.get(bldg, "#3B82F6"), 0.65)
+            fill_rgba = _hex_to_rgba(colors_map.get(bldg, "#059669"), 0.65)
             fig_stack.add_trace(go.Scatter(
                 x=bdf["Hour"], y=bdf["Energy Consumption"],
                 mode="lines", name=SHORT.get(bldg, bldg),
@@ -346,7 +346,7 @@ def render_analytics() -> None:
                         {row['Label']}
                     </div>
                     <div style="height:4px;background:#F1F5F9;border-radius:4px;">
-                        <div style="height:4px;background:#3B82F6;border-radius:4px;width:{bar_pct}%;"></div>
+                        <div style="height:4px;background:#059669;border-radius:4px;width:{bar_pct}%;"></div>
                     </div>
                 </div>
                 <span style="font-size:0.78rem;font-weight:700;color:#0F172A;min-width:48px;text-align:right;">
@@ -437,7 +437,7 @@ def render_analytics() -> None:
     with col_wea:
         st.markdown('<div class="kpi-card">', unsafe_allow_html=True)
         # Use graph_objects scatter to avoid statsmodels dependency
-        color_map_list = ["#3B82F6","#10B981","#F59E0B","#8B5CF6","#EF4444","#06B6D4"]
+        color_map_list = ["#059669","#10B981","#F59E0B","#8B5CF6","#EF4444","#06B6D4"]
         fig_scat = go.Figure()
         for i, bldg in enumerate(df["Building"].unique()):
             bdf_s = df[df["Building"]==bldg]

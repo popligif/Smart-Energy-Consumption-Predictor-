@@ -150,13 +150,13 @@ def render_alerts() -> None:
         for thresh_name, details in THRESHOLD_RATIONALE.items():
             st.markdown(f"""
             <div style="background:#F8FAFC;border-radius:10px;padding:16px;margin-bottom:14px;
-                        border-left:4px solid #3B82F6;">
+                        border-left:4px solid #059669;">
               <div style="font-size:0.95rem;font-weight:700;color:#0F172A;margin-bottom:6px;">
                 🎯 {thresh_name}
               </div>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
                 <div>
-                  <div style="font-size:0.72rem;color:#3B82F6;font-weight:700;
+                  <div style="font-size:0.72rem;color:#059669;font-weight:700;
                                text-transform:uppercase;margin-bottom:4px;">
                     Standard / Basis
                   </div>
@@ -174,12 +174,12 @@ def render_alerts() -> None:
                   </div>
                 </div>
               </div>
-              <div style="margin-top:10px;background:#EFF6FF;border-radius:6px;padding:10px;">
-                <div style="font-size:0.72rem;color:#1D4ED8;font-weight:700;
+              <div style="margin-top:10px;background:#ECFDF5;border-radius:6px;padding:10px;">
+                <div style="font-size:0.72rem;color:#047857;font-weight:700;
                              text-transform:uppercase;margin-bottom:3px;">
                   ⚡ Hybrid Energy / Load Sharing Action
                 </div>
-                <div style="font-size:0.8rem;color:#1E40AF;line-height:1.5;">
+                <div style="font-size:0.8rem;color:#064E3B;line-height:1.5;">
                   {details['hybrid_action']}
                 </div>
               </div>
@@ -330,13 +330,13 @@ def render_alerts() -> None:
                 {decision}
               </div>
             </div>
-            <div style="background:#EFF6FF;border-radius:8px;padding:12px;
-                        border:1px solid #DBEAFE;">
-              <div style="font-size:0.7rem;color:#1D4ED8;font-weight:700;
+            <div style="background:#ECFDF5;border-radius:8px;padding:12px;
+                        border:1px solid #D1FAE5;">
+              <div style="font-size:0.7rem;color:#047857;font-weight:700;
                            text-transform:uppercase;margin-bottom:4px;">
                 Hybrid Energy Action
               </div>
-              <div style="font-size:0.8rem;color:#1E40AF;line-height:1.5;">
+              <div style="font-size:0.8rem;color:#064E3B;line-height:1.5;">
                 {hybrid_action}
               </div>
             </div>
@@ -382,7 +382,7 @@ def render_alerts() -> None:
               <b style="color:#059669;">{est_carbon_saved:.2f} kg CO₂/day</b>
             </span>
             <span>📉 Energy Reduction Potential:
-              <b style="color:#3B82F6;">~10%</b>
+              <b style="color:#059669;">~10%</b>
             </span>
           </div>
         </div>
