@@ -103,6 +103,9 @@ def render_settings() -> None:
         }
         
         if settings_manager.save_settings(new_configs):
-            st.success("🎉 Configuration parameters successfully saved and applied system-wide.")
+            # Clear ALL st.cache_data so the new tariff/carbon propagate
+            st.cache_data.clear()
+            st.success("🎉 Configuration saved! KPIs, costs, and carbon figures are now recalculated.")
+            st.rerun()
         else:
             st.error("Failed to save settings. Check permissions on config/settings.json.")
