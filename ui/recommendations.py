@@ -1,84 +1,150 @@
 """
-UI component for displaying explainable AI recommendations and ROI analysis (FR-5).
+AI Recommendations page — Redesigned to match enterprise UI.
+Fixes HTML-rendering-as-raw-text bug by using html.escape() on all dynamic data.
 """
+import html
 import streamlit as st
 from services.recommendation_service import RecommendationService
 
+
+def _e(text: str) -> str:
+    """HTML-escape a string so special chars don't break the rendered card."""
+    return html.escape(str(text), quote=False)
+
+
 def render_recommendations() -> None:
-    """Renders the AI Recommendations tab in Streamlit."""
-    st.header("💡 AI Energy Recommendation Engine")
-    st.write(
-        "Dynamic, data-driven operational improvements compiled by scanning campus metrics."
-    )
-    
     recommender = RecommendationService()
-    recs = recommender.generate_recommendations()
-    
-    # Calculate overall potentials
-    tot_savings_inr = sum(r["Annual Savings (INR)"] for r in recs)
-    tot_offset_co2 = sum(r["Annual Carbon Offset (kg CO2)"] for r in recs)
-    
-    # Financial Banner with layout styling
-    st.markdown(
-        f"""
-        <div style="background-color: #E6FFFA; border: 1px solid #319795; padding: 20px; border-radius: 10px; margin-bottom: 25px;">
-            <h3 style="color: #234E52; margin-top: 0; margin-bottom: 8px;">Total Campus Savings Potential</h3>
-            <div style="display: flex; gap: 30px;">
-                <div>
-                    <span style="font-size: 0.85rem; color: #2C7A7B; font-weight: 600; text-transform: uppercase;">Annual Cost Reduction</span><br/>
-                    <span style="font-size: 1.8rem; font-weight: 800; color: #285E61;">₹{tot_savings_inr:,.2f} / year</span>
-                </div>
-                <div>
-                    <span style="font-size: 0.85rem; color: #2C7A7B; font-weight: 600; text-transform: uppercase;">Annual Carbon Mitigation</span><br/>
-                    <span style="font-size: 1.8rem; font-weight: 800; color: #285E61;">{tot_offset_co2:,.1f} kg CO₂ / year</span>
-                </div>
-            </div>
+    recs        = recommender.generate_recommendations()
+
+    tot_savings_inr = sum(r["Annual Savings (INR)"]          for r in recs)
+    tot_offset_co2  = sum(r["Annual Carbon Offset (kg CO2)"] for r in recs)
+
+    # ── Section header ─────────────────────────────────────────────────────────
+    st.markdown("""
+    <div style="padding:20px 0 4px 0;">
+      <div style="font-size:1.5rem;font-weight:800;color:#0F172A;">
+        💡 AI Energy Recommendation Engine
+      </div>
+      <div style="color:#94A3B8;font-size:0.82rem;">
+        Data-driven, explainable optimisation actions ranked by financial impact
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # ── Savings Banner ─────────────────────────────────────────────────────────
+    st.markdown(f"""
+    <div style="background:linear-gradient(135deg,#ECFDF5,#D1FAE5);
+                border:1px solid #6EE7B7;padding:20px 24px;border-radius:14px;
+                margin-bottom:20px;">
+      <div style="font-size:0.75rem;font-weight:700;color:#059669;
+                   text-transform:uppercase;margin-bottom:6px;">
+        Total Campus Savings Potential — {len(recs)} Actions Identified
+      </div>
+      <div style="display:flex;gap:40px;align-items:center;flex-wrap:wrap;">
+        <div>
+          <div style="font-size:0.78rem;color:#065F46;font-weight:600;">
+            Annual Cost Reduction
+          </div>
+          <div style="font-size:2rem;font-weight:800;color:#064E3B;">
+            ₹{tot_savings_inr:,.0f} <span style="font-size:1rem;font-weight:500;">/ year</span>
+          </div>
         </div>
-        """,
-        unsafe_allow_html=True
-    )
-    
-    st.write(f"Showing {len(recs)} customized optimization recommendations:")
-    
-    for r in recs:
-        # Determine confidence color
-        conf = r["Confidence"]
-        conf_color = "#38A169" if conf == "High" else ("#DD6B20" if conf == "Medium" else "#E53E3E")
-        
-        st.markdown(
-            f"""
-            <div style="background-color: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 8px; padding: 20px; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
-                    <div>
-                        <span style="font-size: 0.8rem; color: #718096; text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">
-                            {r['Category']}
-                        </span>
-                        <h4 style="margin: 3px 0 0 0; color: #2D3748; font-size: 1.15rem; font-weight: 700;">
-                            {r['Title']}
-                        </h4>
-                    </div>
-                    <span style="background-color: {conf_color}1A; color: {conf_color}; font-size: 0.75rem; font-weight: bold; padding: 4px 10px; border-radius: 12px; border: 1px solid {conf_color};">
-                        {conf} Confidence
-                    </span>
-                </div>
-                
-                <div style="font-size: 0.95rem; color: #4A5568; margin-bottom: 12px; line-height: 1.5;">
-                    <b>Proposed Action:</b> {r['Details']}
-                </div>
-                
-                <div style="background-color: #F7FAFC; padding: 12px; border-radius: 6px; font-size: 0.85rem; color: #4A5568; margin-bottom: 12px; border-left: 3px solid #CBD5E0;">
-                    <b>Triggering Telemetry:</b> <i>{r['Trigger']}</i>
-                </div>
-                
-                <div style="display: flex; gap: 20px; font-size: 0.85rem; font-weight: bold; margin-bottom: 12px;">
-                    <span style="color: #2F855A;">💰 Est. Annual Savings: ₹{r['Annual Savings (INR)']:,.2f}</span>
-                    <span style="color: #319795;">🌱 Carbon Offset: {r['Annual Carbon Offset (kg CO2)']:,.1f} kg CO₂</span>
-                </div>
-                
-                <div style="font-size: 0.85rem; color: #718096; line-height: 1.4; border-top: 1px solid #EDF2F7; padding-top: 10px;">
-                    <b>Explainable AI Reasoning:</b> {r['Reasoning']}
-                </div>
-            </div>
-            """,
-            unsafe_allow_html=True
+        <div style="width:1px;height:50px;background:#A7F3D0;"></div>
+        <div>
+          <div style="font-size:0.78rem;color:#065F46;font-weight:600;">
+            Annual Carbon Mitigation
+          </div>
+          <div style="font-size:2rem;font-weight:800;color:#064E3B;">
+            {tot_offset_co2:,.0f} <span style="font-size:1rem;font-weight:500;">kg CO₂ / yr</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # ── Filters ────────────────────────────────────────────────────────────────
+    col_f1, col_f2 = st.columns(2, gap="medium")
+    with col_f1:
+        cats = ["All"] + sorted({r["Category"] for r in recs})
+        cat_filter = st.selectbox("Filter by Category", cats, key="rec_cat")
+    with col_f2:
+        confs = ["All", "High", "Medium", "Low"]
+        conf_filter = st.selectbox("Filter by Confidence", confs, key="rec_conf")
+
+    filtered = recs
+    if cat_filter  != "All": filtered = [r for r in filtered if r["Category"] == cat_filter]
+    if conf_filter != "All": filtered = [r for r in filtered if r["Confidence"] == conf_filter]
+
+    st.markdown(f"""
+    <div style="font-size:0.82rem;color:#64748B;margin:8px 0 16px 0;">
+      Showing <b>{len(filtered)}</b> recommendation(s)
+    </div>
+    """, unsafe_allow_html=True)
+
+    # ── Recommendation Cards ───────────────────────────────────────────────────
+    for r in filtered:
+        conf       = _e(r["Confidence"])
+        category   = _e(r["Category"])
+        title      = _e(r["Title"])
+        details    = _e(r["Details"])
+        trigger    = _e(r["Trigger"])
+        reasoning  = _e(r["Reasoning"])
+        savings    = r["Annual Savings (INR)"]
+        carbon     = r["Annual Carbon Offset (kg CO2)"]
+
+        conf_color = (
+            "#10B981" if conf == "High"
+            else "#F59E0B" if conf == "Medium"
+            else "#EF4444"
         )
+        bg = "#F0FDF4" if conf == "High" else "#FFFBEB" if conf == "Medium" else "#FEF2F2"
+
+        # Build the card as a plain Python string — no nested f-strings
+        card_html = (
+            '<div style="background:white;border:1px solid #F1F5F9;'
+            'border-left:5px solid ' + conf_color + ';'
+            'border-radius:12px;padding:20px;margin-bottom:16px;'
+            'box-shadow:0 1px 4px rgba(0,0,0,0.05);">'
+
+            # Header row
+            '<div style="display:flex;justify-content:space-between;'
+            'align-items:flex-start;margin-bottom:10px;">'
+            '<div>'
+            '<span style="font-size:0.72rem;color:#94A3B8;text-transform:uppercase;'
+            'font-weight:700;letter-spacing:0.5px;">' + category + '</span>'
+            '<div style="font-size:1.05rem;font-weight:700;color:#0F172A;margin-top:3px;">'
+            + title + '</div>'
+            '</div>'
+            '<span style="background:' + bg + ';color:' + conf_color + ';'
+            'font-size:0.72rem;font-weight:700;padding:4px 12px;border-radius:20px;'
+            'border:1px solid ' + conf_color + ';white-space:nowrap;">'
+            + conf + ' Confidence'
+            '</span>'
+            '</div>'
+
+            # Proposed action
+            '<div style="font-size:0.85rem;color:#374151;margin-bottom:10px;line-height:1.6;">'
+            '<b>Proposed Action:</b> ' + details + '</div>'
+
+            # Triggering telemetry
+            '<div style="background:#F8FAFC;padding:10px 14px;border-radius:8px;'
+            'font-size:0.82rem;color:#4B5563;margin-bottom:10px;'
+            'border-left:3px solid #CBD5E0;">'
+            '<b>Triggering Telemetry:</b> <i>' + trigger + '</i></div>'
+
+            # Financial metrics
+            '<div style="display:flex;gap:24px;font-size:0.82rem;'
+            'font-weight:700;margin-bottom:10px;flex-wrap:wrap;">'
+            '<span style="color:#059669;">&#x1F4B0; Est. Annual Savings: '
+            '&#8377;' + f'{savings:,.0f}' + '</span>'
+            '<span style="color:#0891B2;">&#x1F331; Carbon Offset: '
+            + f'{carbon:,.0f}' + ' kg CO&#8322;</span>'
+            '</div>'
+
+            # AI reasoning
+            '<div style="font-size:0.8rem;color:#6B7280;line-height:1.5;'
+            'border-top:1px solid #F1F5F9;padding-top:10px;">'
+            '<b>Explainable AI Reasoning:</b> ' + reasoning + '</div>'
+            '</div>'
+        )
+        st.markdown(card_html, unsafe_allow_html=True)
