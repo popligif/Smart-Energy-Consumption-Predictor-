@@ -89,28 +89,31 @@ def _precompute_dashboard(csv_path: str):
 
     return spark_base, bldg_hourly, bldg_summary, df_imp, equip_totals
 
-# ── Helper: tiny sparkline (with UNIQUE key parameter) ───────────────────────
-def _sparkline(values: list, color: str, chart_key: str, height: int = 50) -> None:
-    """Renders a sparkline chart with a guaranteed unique key to avoid ID conflicts."""
-    fig = go.Figure()
-    # Build valid rgba from hex
-    try:
-        r, g, b = int(color[1:3],16), int(color[3:5],16), int(color[5:7],16)
-        fill_color = f"rgba({r},{g},{b},0.12)"
-    except Exception:
-        fill_color = "rgba(5,150,105,0.12)"
-    fig.add_trace(go.Scatter(
-        y=values, mode="lines",
-        line=dict(color=color, width=2, shape="spline"),
-        fill="tozeroy", fillcolor=fill_color
-    ))
-    fig.update_layout(
-        height=height, margin=dict(l=0, r=0, t=0, b=0),
-        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-        xaxis=dict(visible=False), yaxis=dict(visible=False), showlegend=False
-    )
-    st.plotly_chart(fig, use_container_width=True,
-                    config={"displayModeBar": False}, key=chart_key)
+# ── Helper: ultra-fast SVG sparkline ──────────────────────────────────────────
+def _svg_sparkline(values: list, color: str, height: int = 45) -> str:
+    """Generates a pure HTML/SVG sparkline to avoid Plotly WebGL browser throttling."""
+    if not values: return ""
+    v_min, v_max = min(values), max(values)
+    rng = v_max - v_min if v_max != v_min else 1
+    width = 200
+    
+    points = []
+    for i, v in enumerate(values):
+        x = i * (width / max(1, len(values)-1))
+        y = height - ((v - v_min) / rng) * (height - 8) - 4
+        points.append(f"{x},{y}")
+        
+    path_d = f"M 0,{height} " + " ".join(f"L {p}" for p in points) + f" L {width},{height} Z"
+    line_d = "M " + " L ".join(points)
+    
+    return f'''
+    <div style="margin-top:4px;">
+        <svg width="100%" height="{height}" viewBox="0 0 {width} {height}" preserveAspectRatio="none" style="display:block;">
+            <path d="{path_d}" fill="{color}" fill-opacity="0.12" stroke="none" />
+            <path d="{line_d}" fill="none" stroke="{color}" stroke-width="2.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+    </div>
+    '''
 
 # ── Helper: KPI card HTML ─────────────────────────────────────────────────────
 def _kpi_card(icon, icon_bg, value, unit, label, delta, delta_up):
@@ -178,17 +181,13 @@ def render_dashboard() -> None:
     peak_kw    = round(kpis["peak_load_kw"], 1)
 
     with c1:
-        st.markdown(_kpi_card("⚡","#ECFDF5",f"{total_kw}","kW","Total Campus Consumption","2.4%",True), unsafe_allow_html=True)
-        _sparkline(spark_base, "#059669", "spark_c1")
+        st.markdown(_kpi_card("⚡","#ECFDF5",f"{total_kw}","kW","Total Campus Consumption","2.4%",True) + _svg_sparkline(spark_base, "#059669"), unsafe_allow_html=True)
     with c2:
-        st.markdown(_kpi_card("📅","#F0FDF4",f"{daily_kwh:,.1f}","kWh","Today's Energy Usage","1.8%",True), unsafe_allow_html=True)
-        _sparkline(spark_base, "#10B981", "spark_c2")
+        st.markdown(_kpi_card("📅","#F0FDF4",f"{daily_kwh:,.1f}","kWh","Today's Energy Usage","1.8%",True) + _svg_sparkline(spark_base, "#10B981"), unsafe_allow_html=True)
     with c3:
-        st.markdown(_kpi_card("₹","#FFFBEB",f"₹{total_cost:,.0f}","","Today's Electricity Cost","1.8%",True), unsafe_allow_html=True)
-        _sparkline(spark_base, "#F59E0B", "spark_c3")
+        st.markdown(_kpi_card("₹","#FFFBEB",f"₹{total_cost:,.0f}","","Today's Electricity Cost","1.8%",True) + _svg_sparkline(spark_base, "#F59E0B"), unsafe_allow_html=True)
     with c4:
-        st.markdown(_kpi_card("📈","#FEF2F2",f"{peak_kw}","kW","Peak Demand","0.6%",False), unsafe_allow_html=True)
-        _sparkline(spark_base, "#EF4444", "spark_c4")
+        st.markdown(_kpi_card("📈","#FEF2F2",f"{peak_kw}","kW","Peak Demand","0.6%",False) + _svg_sparkline(spark_base, "#EF4444"), unsafe_allow_html=True)
 
     # ── ROW 2 KPI Cards ───────────────────────────────────────────────────────
     c5, c6, c7, c8 = st.columns(4, gap="medium")
@@ -198,17 +197,13 @@ def render_dashboard() -> None:
     total_floors  = equip_totals["total_floors"]
 
     with c5:
-        st.markdown(_kpi_card("🌿","#F0FDF4",f"{total_carbon:,.1f}","CO₂ kg","Carbon Emissions","1.8%",True), unsafe_allow_html=True)
-        _sparkline(spark_base, "#10B981", "spark_c5")
+        st.markdown(_kpi_card("🌿","#F0FDF4",f"{total_carbon:,.1f}","CO₂ kg","Carbon Emissions","1.8%",True) + _svg_sparkline(spark_base, "#10B981"), unsafe_allow_html=True)
     with c6:
-        st.markdown(_kpi_card("🎯","#F5F3FF",f"{health_score}","%","Campus Efficiency","0.5%",True), unsafe_allow_html=True)
-        _sparkline([60,62,65,63,68,70,72,70,68,72,75,73], "#8B5CF6", "spark_c6")
+        st.markdown(_kpi_card("🎯","#F5F3FF",f"{health_score}","%","Campus Efficiency","0.5%",True) + _svg_sparkline([60,62,65,63,68,70,72,70,68,72,75,73], "#8B5CF6"), unsafe_allow_html=True)
     with c7:
-        st.markdown(_kpi_card("🏢","#ECFDF5",f"{num_buildings}",f"/ {num_buildings}","Active Buildings","0%",True), unsafe_allow_html=True)
-        _sparkline([6]*12, "#059669", "spark_c7")
+        st.markdown(_kpi_card("🏢","#ECFDF5",f"{num_buildings}",f"/ {num_buildings}","Active Buildings","0%",True) + _svg_sparkline([6]*12, "#059669"), unsafe_allow_html=True)
     with c8:
-        st.markdown(_kpi_card("📐","#ECFDF5",f"{total_floors}",f"/ {total_floors}","Active Floors","0%",True), unsafe_allow_html=True)
-        _sparkline(list(range(10, 22)), "#06B6D4", "spark_c8")
+        st.markdown(_kpi_card("📐","#ECFDF5",f"{total_floors}",f"/ {total_floors}","Active Floors","0%",True) + _svg_sparkline(list(range(10, 22)), "#06B6D4"), unsafe_allow_html=True)
 
     st.markdown("---")
 
@@ -317,7 +312,7 @@ def render_dashboard() -> None:
                   <span style="background:{sc}1A;color:{sc};font-size:0.68rem;
                                padding:2px 8px;border-radius:10px;font-weight:600;">{sl}</span>
                 """, unsafe_allow_html=True)
-                _sparkline(spark_vals, sc, spark_key, height=55)
+                st.markdown(_svg_sparkline(spark_vals, sc, height=45), unsafe_allow_html=True)
                 st.markdown(f"""
                   <div style="display:flex;gap:10px;padding:8px 0 4px 0;
                               border-top:1px solid #F1F5F9;font-size:0.72rem;">
