@@ -12,17 +12,60 @@ import numpy as np
 from services.data_service import DataService
 from services.analytics_service import AnalyticsService
 
-def _hex_to_rgba(hex_color: str, alpha: float = 0.7) -> str:
-    """Converts #RRGGBB to rgba(r,g,b,a) for valid Plotly fillcolor."""
-    try:
-        r, g, b = int(hex_color[1:3],16), int(hex_color[3:5],16), int(hex_color[5:7],16)
-        return f"rgba({r},{g},{b},{alpha})"
-    except Exception:
-        return f"rgba(59,130,246,{alpha})"
+@st.cache_data(ttl=600, show_spinner=False)
+def _precompute_analytics(csv_path: str):
+    from services.data_service import _load_and_process_csv
+    df = _load_and_process_csv(csv_path)
+    
+    # 1. Building Averages
+    bldg_avg = df.groupby("Building")["Energy Consumption"].mean().reset_index()
+    bldg_avg.columns = ["Building", "Avg_kW"]
+    bldg_avg = bldg_avg.sort_values("Avg_kW", ascending=True)
+    
+    # 2. Hourly Totals
+    hourly_total = df.groupby("Hour")["Energy Consumption"].sum().reset_index()
+    hourly_total.columns = ["Hour", "Total_kW"]
+    
+    total_live_kw = round(df["Energy Consumption"].mean() * df["Building"].nunique(), 1)
+    
+    # 3. Component distribution totals
+    dist_totals = {
+        "hvac": round(df["HVAC Load"].sum(), 1),
+        "light": round(df["Lighting Load"].sum(), 1),
+        "lab": round(df["Laboratory Usage"].sum(), 1),
+        "ws": round(df["Workshop Usage"].sum(), 1),
+        "equip": round(df["Equipment Usage"].sum(), 1),
+        "coe": round(df["CoE Activity"].sum(), 1)
+    }
+    
+    # 4. Hourly data per building for the timeline
+    bldg_hourly = {}
+    for b in df["Building"].unique():
+        bdf = df[df["Building"]==b].groupby("Hour")["Energy Consumption"].mean().reset_index()
+        bldg_hourly[b] = {"Hour": bdf["Hour"].tolist(), "Energy Consumption": bdf["Energy Consumption"].tolist()}
+        
+    # 5. Top Rows (Floor wise mean)
+    top_rows = df.groupby(["Building","Floor"])["Energy Consumption"].mean().reset_index()
+    
+    # 6. Correlation Matrix
+    corr_cols = [
+        "Temperature", "Humidity", "Occupancy", "Running Computers",
+        "Running ACs", "Energy Consumption", "Lighting Load", "HVAC Load"
+    ]
+    # Filter columns that actually exist
+    valid_cols = [c for c in corr_cols if c in df.columns]
+    corr_df = df[valid_cols].corr()
+    
+    return bldg_avg, hourly_total, total_live_kw, dist_totals, bldg_hourly, top_rows, corr_df
 
 def render_analytics() -> None:
     data_svc  = DataService()
     analytics  = AnalyticsService()
+    
+    # Pre-compute all Pandas operations once per session
+    bldg_avg, hourly_total, total_live_kw, dist_totals, bldg_hourly, top_rows, corr_df = _precompute_analytics(data_svc.csv_path)
+    
+    # Load dataset for raw point rendering (cached, O(1))
     df = data_svc.load_dataset()
 
     # ── Section Header ────────────────────────────────────────────────────────
@@ -38,31 +81,21 @@ def render_analytics() -> None:
     </div>
     """, unsafe_allow_html=True)
 
-    # ── Pre-compute ───────────────────────────────────────────────────────────
-    bldg_avg = df.groupby("Building")["Energy Consumption"].mean().reset_index()
-    bldg_avg.columns = ["Building", "Avg_kW"]
-    bldg_avg = bldg_avg.sort_values("Avg_kW", ascending=True)
-
-    hourly_total = df.groupby("Hour")["Energy Consumption"].sum().reset_index()
-    hourly_total.columns = ["Hour", "Total_kW"]
-
-    total_live_kw = round(df["Energy Consumption"].mean() * df["Building"].nunique(), 1)
-    campus_max_kw = 445  # Reference capacity
-
     SHORT = {
         "Academic Block A": "Block A", "Academic Block B": "Block B",
         "Academic Block C": "Block C", "Academic Block D": "Block D",
         "Workshop Building": "Workshop", "Centre of Excellence": "CoE"
     }
     bldg_avg["Short"] = bldg_avg["Building"].map(SHORT)
+    campus_max_kw = 445  # Reference capacity
 
-    # Energy distribution by type (derived from column sums)
-    hvac_total  = round(df["HVAC Load"].sum(), 1)
-    light_total = round(df["Lighting Load"].sum(), 1)
-    lab_total   = round(df["Laboratory Usage"].sum(), 1)
-    ws_total    = round(df["Workshop Usage"].sum(), 1)
-    equip_total = round(df["Equipment Usage"].sum(), 1)
-    coe_total   = round(df["CoE Activity"].sum(), 1)
+    # Energy distribution by type (derived from dist_totals)
+    hvac_total  = dist_totals["hvac"]
+    light_total = dist_totals["light"]
+    lab_total   = dist_totals["lab"]
+    ws_total    = dist_totals["ws"]
+    equip_total = dist_totals["equip"]
+    coe_total   = dist_totals["coe"]
 
     # ── Row 1: Gauge · Energy Meter · Building Bar · Distribution Donut ───────
     c1, c2, c3, c4 = st.columns(4, gap="medium")
@@ -253,7 +286,8 @@ def render_analytics() -> None:
         fig_stack = go.Figure()
         bldg_list = list(df["Building"].unique())
         for bldg in bldg_list:
-            bdf = df[df["Building"]==bldg].groupby("Hour")["Energy Consumption"].mean().reset_index()
+            bdf = bldg_hourly.get(bldg)
+            if not bdf: continue
             fill_mode = "tozeroy" if bldg == bldg_list[0] else "tonexty"
             fill_rgba = _hex_to_rgba(colors_map.get(bldg, "#3B82F6"), 0.65)
             fig_stack.add_trace(go.Scatter(
@@ -285,7 +319,7 @@ def render_analytics() -> None:
         </div>""", unsafe_allow_html=True)
 
         # Per-building top consumers by floor average
-        top_rows = df.groupby(["Building","Floor"])["Energy Consumption"].mean().reset_index()
+        # use precomputed top_rows
         top_rows.columns = ["Building","Floor","Avg_kW"]
         top_rows["Label"] = top_rows.apply(
             lambda r: f"{SHORT.get(r['Building'],r['Building'])} · Floor {r['Floor']}", axis=1
@@ -378,9 +412,7 @@ def render_analytics() -> None:
 
     with col_corr:
         st.markdown('<div class="kpi-card">', unsafe_allow_html=True)
-        corr_cols = ["Energy Consumption","Temperature","Humidity","Occupancy",
-                     "Running ACs","Running Computers","Power Factor"]
-        corr_df = df[corr_cols].corr()
+        # corr_df is already precomputed from cached function
         fig_corr = px.imshow(
             corr_df, color_continuous_scale="RdBu",
             zmin=-1, zmax=1, text_auto=".2f"
