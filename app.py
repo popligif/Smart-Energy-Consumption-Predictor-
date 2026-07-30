@@ -116,9 +116,32 @@ ALL_PAGES = [
 ]
 
 ROLE_PAGES = {
-    "Director": ALL_PAGES,
-    "Energy Manager": ALL_PAGES,
-    "Electrical Engineer": ALL_PAGES,
+    "Director": [
+        "🏛️ Executive Decision Centre",
+        "⚡ Energy Analytics",
+        "💡 AI Recommendations",
+        "🔔 Smart Alerts",
+        "📄 Executive Report",
+        "⚙️ Settings",
+    ],
+    "Energy Manager": [
+        "🏛️ Executive Decision Centre",
+        "⚡ Energy Analytics",
+        "🔮 Scenario Simulator",
+        "🔌 Load Optimization",
+        "💡 AI Recommendations",
+        "🔔 Smart Alerts",
+        "📄 Executive Report",
+        "⚙️ Settings",
+    ],
+    "Electrical Engineer": [
+        "🏛️ Executive Decision Centre",
+        "⚡ Energy Analytics",
+        "🔮 Scenario Simulator",
+        "🔌 Load Optimization",
+        "🔍 Telemetry Explorer",
+        "⚙️ Settings",
+    ],
     "Administrator": ALL_PAGES,
 }
 
