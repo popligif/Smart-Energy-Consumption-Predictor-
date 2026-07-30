@@ -14,6 +14,81 @@ from services.dashboard_service import DashboardService
 from services.alert_service import AlertService
 from services.data_service import DataService
 
+# ── Cached pre-computation: runs once per session, not every rerun ──────────
+@st.cache_data(ttl=600, show_spinner=False)
+def _precompute_dashboard(csv_path: str):
+    """All heavy Pandas operations cached — keyed by csv_path."""
+    from services.data_service import _load_and_process_csv
+    df = _load_and_process_csv(csv_path)
+
+    # Hourly totals for sparklines
+    hourly_total = df.groupby("Hour")["Energy Consumption"].sum().values.tolist()
+    spark_base = hourly_total[:12] if len(hourly_total) >= 12 else hourly_total
+
+    # Per-building hourly sparkline values
+    bldg_hourly = {}
+    for b in df["Building"].unique():
+        bldg_hourly[b] = (
+            df[df["Building"] == b]
+            .sort_values("Hour")["Energy Consumption"]
+            .values.tolist()
+        )
+
+    # Per-building aggregate stats
+    bldg_summary = {}
+    for b in df["Building"].unique():
+        bdf = df[df["Building"] == b]
+        bldg_summary[b] = {
+            "avg_kw":       round(bdf["Energy Consumption"].mean(), 1),
+            "avg_pf":       round(bdf["Power Factor"].mean(), 3),
+            "avg_occ":      round(bdf["Occupancy"].mean()),
+            "avg_pcs":      round(bdf["Running Computers"].mean()),
+            "avg_acs":      round(bdf["Running ACs"].mean()),
+            "avg_lighting": round(bdf["Lighting Load"].mean(), 2),
+            "avg_hvac":     round(bdf["HVAC Load"].mean(), 2),
+            "avg_lab":      round(bdf["Laboratory Usage"].mean(), 2),
+            "avg_workshop": round(bdf["Workshop Usage"].mean(), 2),
+            "avg_coe":      round(bdf["CoE Activity"].mean(), 2),
+            "avg_equip":    round(bdf["Equipment Usage"].mean(), 2),
+        }
+
+    # Feature importance via Pearson correlation
+    feat_cols = {
+        "Occupancy":         "👥 Occupancy",
+        "Running ACs":       "❄️ Running ACs",
+        "Running Computers": "💻 Running PCs",
+        "HVAC Load":         "🌡️ HVAC Load",
+        "Lighting Load":     "💡 Lighting",
+        "Laboratory Usage":  "🔬 Lab Equipment",
+        "Workshop Usage":    "🔧 Workshop Equip.",
+        "Temperature":       "🌡️ Outdoor Temp",
+        "Humidity":          "💧 Humidity",
+        "CoE Activity":      "🏛️ CoE Activity",
+    }
+    corr_vals = {}
+    for col, label in feat_cols.items():
+        if col in df.columns:
+            corr_vals[label] = round(abs(df[col].corr(df["Energy Consumption"])), 3)
+
+    df_imp = (
+        pd.DataFrame(list(corr_vals.items()), columns=["Feature", "Importance"])
+        .sort_values("Importance", ascending=True)
+    )
+
+    # Campus-wide equipment totals
+    equip_totals = {
+        "total_pcs":  int(df["Running Computers"].sum()),
+        "total_acs":  int(df["Running ACs"].sum()),
+        "total_occ":  int(df["Occupancy"].sum()),
+        "lab_active": int((df["Laboratory Usage"] > 0).sum()),
+        "workshop_a": int((df["Workshop Usage"] > 0).sum()),
+        "campus_mean": round(df["Energy Consumption"].mean(), 1),
+        "num_buildings": df["Building"].nunique(),
+        "total_floors":  df["Floor"].nunique() * df["Building"].nunique(),
+    }
+
+    return spark_base, bldg_hourly, bldg_summary, df_imp, equip_totals
+
 # ── Helper: tiny sparkline (with UNIQUE key parameter) ───────────────────────
 def _sparkline(values: list, color: str, chart_key: str, height: int = 50) -> None:
     """Renders a sparkline chart with a guaranteed unique key to avoid ID conflicts."""
@@ -64,14 +139,10 @@ def render_dashboard() -> None:
     health   = db.calculate_campus_health_score()
     rankings = db.get_building_rankings()
     alerts   = alert_svc.scan_for_alerts()
-    df       = data_svc.load_dataset()
 
-    hourly_total = df.groupby("Hour")["Energy Consumption"].sum().values.tolist()
-    spark_base   = hourly_total[:12] if len(hourly_total) >= 12 else hourly_total
-
-    bldg_hourly = {}
-    for b in df["Building"].unique():
-        bldg_hourly[b] = df[df["Building"]==b].sort_values("Hour")["Energy Consumption"].values.tolist()
+    # Use cached precomputed data instead of re-computing on every rerun
+    spark_base, bldg_hourly, bldg_summary, df_imp, equip_totals = \
+        _precompute_dashboard(data_svc.csv_path)
 
     SHORT = {
         "Academic Block A": "Block A", "Academic Block B": "Block B",
@@ -123,8 +194,8 @@ def render_dashboard() -> None:
     c5, c6, c7, c8 = st.columns(4, gap="medium")
     total_carbon  = round(kpis["total_carbon_kg"], 1)
     health_score  = health["overall_score"]
-    num_buildings = df["Building"].nunique()
-    total_floors  = df["Floor"].nunique() * num_buildings
+    num_buildings = equip_totals["num_buildings"]
+    total_floors  = equip_totals["total_floors"]
 
     with c5:
         st.markdown(_kpi_card("🌿","#F0FDF4",f"{total_carbon:,.1f}","CO₂ kg","Carbon Emissions","1.8%",True), unsafe_allow_html=True)
@@ -157,20 +228,8 @@ def render_dashboard() -> None:
     </div>
     """, unsafe_allow_html=True)
 
-    bldg_summary = {}
-    for b in df["Building"].unique():
-        bdf = df[df["Building"]==b]
-        bldg_summary[b] = {
-            "avg_kw":  round(bdf["Energy Consumption"].mean(), 1),
-            "avg_pf":  round(bdf["Power Factor"].mean(), 3),
-            "avg_occ": round(bdf["Occupancy"].mean()),
-            "avg_pcs": round(bdf["Running Computers"].mean()),
-            "avg_acs": round(bdf["Running ACs"].mean()),
-            "avg_lighting": round(bdf["Lighting Load"].mean(), 2),
-            "avg_hvac":     round(bdf["HVAC Load"].mean(), 2),
-            "avg_lab":      round(bdf["Laboratory Usage"].mean(), 2),
-            "avg_workshop": round(bdf["Workshop Usage"].mean(), 2),
-        }
+    bldg_summary_local = bldg_summary
+    buildings_sorted = list(BUILDING_META.keys())
 
     def status_for(kw):
         if   kw < 15:  return "#10B981", "Normal"
@@ -178,8 +237,7 @@ def render_dashboard() -> None:
         elif kw < 80:  return "#F97316", "High Load"
         else:          return "#EF4444", "Critical"
 
-    buildings_sorted = list(BUILDING_META.keys())
-    campus_mean = round(df["Energy Consumption"].mean(), 1)
+    campus_mean = equip_totals["campus_mean"]
 
     for row_bldgs in [buildings_sorted[:3], buildings_sorted[3:]]:
         cols = st.columns(3, gap="medium")
@@ -307,9 +365,9 @@ def render_dashboard() -> None:
         key="bldg_breakdown_select"
     )
     bstats = bldg_summary.get(selected_bldg, {})
-    bdf_sel = df[df["Building"] == selected_bldg]
-
-    # Compute load components
+    # Use precomputed bdf average CoE and Equipment from bldg_summary
+    coe_kw   = bstats.get("avg_coe", 0)
+    equip_kw = bstats.get("avg_equip", 0)
     lighting_kw = bstats.get("avg_lighting", 0)
     hvac_kw     = bstats.get("avg_hvac", 0)
     lab_kw      = bstats.get("avg_lab", 0)
@@ -408,28 +466,7 @@ def render_dashboard() -> None:
     </div>
     """, unsafe_allow_html=True)
 
-    # Compute Pearson correlation with Energy Consumption as proxy for importance
-    feat_cols = {
-        "Occupancy":          "👥 Occupancy",
-        "Running ACs":        "❄️ Running ACs",
-        "Running Computers":  "💻 Running PCs",
-        "HVAC Load":          "🌡️ HVAC Load",
-        "Lighting Load":      "💡 Lighting",
-        "Laboratory Usage":   "🔬 Lab Equipment",
-        "Workshop Usage":     "🔧 Workshop Equip.",
-        "Temperature":        "🌡️ Outdoor Temp",
-        "Humidity":           "💧 Humidity",
-        "CoE Activity":       "🏛️ CoE Activity",
-    }
-    corr_vals = {}
-    for col, label in feat_cols.items():
-        if col in df.columns:
-            corr = abs(df[col].corr(df["Energy Consumption"]))
-            corr_vals[label] = round(corr, 3)
-
-    df_imp = (pd.DataFrame(list(corr_vals.items()), columns=["Feature","Importance"])
-              .sort_values("Importance", ascending=True))
-
+    # --- Feature Importance: use cached df_imp from _precompute_dashboard ---
     col_imp1, col_imp2 = st.columns([1.4, 1], gap="medium")
     with col_imp1:
         colors_imp = []
@@ -598,11 +635,11 @@ def render_dashboard() -> None:
     </div>
     """, unsafe_allow_html=True)
 
-    total_pcs  = int(df["Running Computers"].sum())
-    total_acs  = int(df["Running ACs"].sum())
-    total_occ  = int(df["Occupancy"].sum())
-    lab_active = int((df["Laboratory Usage"] > 0).sum())
-    workshop_a = int((df["Workshop Usage"] > 0).sum())
+    total_pcs  = equip_totals["total_pcs"]
+    total_acs  = equip_totals["total_acs"]
+    total_occ  = equip_totals["total_occ"]
+    lab_active = equip_totals["lab_active"]
+    workshop_a = equip_totals["workshop_a"]
 
     eq_cols = st.columns(6, gap="medium")
     equip_items = [
