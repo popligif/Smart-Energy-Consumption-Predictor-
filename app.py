@@ -113,9 +113,7 @@ section[data-testid="stSidebar"] .stRadio div[data-testid="stMarkdownContainer"]
 .metric-val { font-size: 2.4rem; font-weight: 800; color: #022C22; line-height: 1.1; letter-spacing: -0.02em; }
 .metric-sub { font-size: 0.85rem; color: #64748B; margin-top: 4px; font-weight: 500; }
 
-/* Remove extra gaps & Fix Streamlit defaults */
-div[data-testid="stVerticalBlock"] > div { gap: 0.8rem !important; }
-div[data-testid="stHorizontalBlock"] { gap: 1.2rem !important; }
+/* Fix Streamlit defaults */
 button[title="View fullscreen"] { display: none; }
 </style>
 """, unsafe_allow_html=True)
@@ -135,10 +133,12 @@ from ui.alerts import render_alerts
 from ui.reports import render_reports
 from ui.settings import render_settings
 from ui.future_works import render_future_works
+from ui.building_drilldown import render_building_drilldown
 
 # ── Role-Based Page Access ────────────────────────────────────────────────────
 ALL_PAGES = [
     "🏛️ Executive Decision Centre",
+    "🏢 Building Drill-Down",
     "⚡ Energy Analytics",
     "🔮 Scenario Simulator",
     "🔌 Load Optimization",
@@ -153,6 +153,7 @@ ALL_PAGES = [
 ROLE_PAGES = {
     "Director": [
         "🏛️ Executive Decision Centre",
+        "🏢 Building Drill-Down",
         "⚡ Energy Analytics",
         "💡 AI Recommendations",
         "🔔 Smart Alerts",
@@ -161,6 +162,7 @@ ROLE_PAGES = {
     ],
     "Energy Manager": [
         "🏛️ Executive Decision Centre",
+        "🏢 Building Drill-Down",
         "⚡ Energy Analytics",
         "🔮 Scenario Simulator",
         "🔌 Load Optimization",
@@ -171,6 +173,7 @@ ROLE_PAGES = {
     ],
     "Electrical Engineer": [
         "🏛️ Executive Decision Centre",
+        "🏢 Building Drill-Down",
         "⚡ Energy Analytics",
         "🔮 Scenario Simulator",
         "🔌 Load Optimization",
@@ -289,6 +292,8 @@ with st.container():
 try:
     if selected_page == "🏛️ Executive Decision Centre":
         render_dashboard()
+    elif selected_page == "🏢 Building Drill-Down":
+        render_building_drilldown()
     elif selected_page == "⚡ Energy Analytics":
         render_analytics()
     elif selected_page == "🔮 Scenario Simulator":

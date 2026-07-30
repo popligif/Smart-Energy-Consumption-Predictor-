@@ -97,7 +97,6 @@ def render_simulator() -> None:
         st.write("Identifies parameters most influential in predicting energy loads.")
         
         if ml_service.feature_importances:
-            # Aggregate building-level importances to keep visualization clean
             raw_imp = ml_service.feature_importances
             agg_imp = {}
             for k, v in raw_imp.items():
@@ -105,20 +104,38 @@ def render_simulator() -> None:
                     agg_imp["Building ID (Location)"] = agg_imp.get("Building ID (Location)", 0.0) + v
                 else:
                     agg_imp[k] = v
-                    
-            df_imp = pd.DataFrame(list(agg_imp.items()), columns=["Feature", "Importance"]).sort_values(by="Importance", ascending=True)
             
-            fig_imp = px.bar(
-                df_imp,
-                y="Feature",
-                x="Importance",
-                orientation="h",
-                color="Importance",
-                color_continuous_scale="Agsunset",
-                height=250
-            )
-            fig_imp.update_layout(showlegend=False, margin=dict(l=0, r=0, t=10, b=0))
-            st.plotly_chart(fig_imp, use_container_width=True)
+            # Sort by importance descending
+            sorted_imp = sorted(agg_imp.items(), key=lambda x: x[1], reverse=True)
+            top_1, top_2 = sorted_imp[0], sorted_imp[1]
+            
+            # Draw ultra-fast HTML bars
+            html_bars = ""
+            for feat, val in sorted_imp:
+                pct = round(val * 100)
+                html_bars += f"""
+                <div style="margin-bottom:8px;">
+                    <div style="display:flex;justify-content:space-between;font-size:0.8rem;color:#475569;margin-bottom:4px;">
+                        <span>{feat}</span>
+                        <span style="font-weight:700;">{pct}%</span>
+                    </div>
+                    <div style="background:#F1F5F9;height:6px;border-radius:4px;width:100%;">
+                        <div style="background:linear-gradient(90deg, #10B981, #059669);height:6px;border-radius:4px;width:{pct}%;"></div>
+                    </div>
+                </div>
+                """
+            
+            st.markdown(f"""
+            <div class="kpi-card" style="padding:20px;">
+                <div style="font-size:1.1rem;font-weight:800;color:#0F172A;margin-bottom:16px;">
+                    🔍 Core Consumption Drivers
+                </div>
+                {html_bars}
+                <div style="margin-top:16px;padding:12px;background:#F0FDF4;border-left:4px solid #10B981;border-radius:6px;font-size:0.85rem;color:#064E3B;">
+                    <strong>Deep Analysis Insight:</strong> The primary driver of power consumption across the campus is <b>{top_1[0]}</b> (accounting for {round(top_1[1]*100)}% of model variance), followed closely by <b>{top_2[0]}</b> ({round(top_2[1]*100)}%). Optimisation strategies targeting these two parameters will yield the highest financial and carbon ROI.
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
             
     st.markdown("---")
     
