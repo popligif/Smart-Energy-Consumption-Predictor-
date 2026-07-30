@@ -1,86 +1,340 @@
 """
-UI component for displaying active Smart Alerts and efficiency warnings (FR-6).
+Smart Alerts Page — Completely rewritten with meaningful, decision-oriented alerts.
+Covers: Hybrid energy switching decisions, load sharing recommendations,
+        threshold scientific basis, and operational severity classification.
 """
 import streamlit as st
 import pandas as pd
 from services.alert_service import AlertService
+from services.data_service import DataService
+
+# ── Threshold scientific basis ────────────────────────────────────────────────
+THRESHOLD_RATIONALE = {
+    "Power Factor < 0.90": {
+        "basis": "IEEE 519-2014 & BEE (Bureau of Energy Efficiency) India guidelines",
+        "significance": (
+            "Power Factor (PF) quantifies how efficiently electrical power is converted into useful work. "
+            "A PF below 0.90 means reactive current is wasting up to 10-19% of transmission capacity. "
+            "DISCOM utilities impose a reactive energy surcharge (₹/kVArh) when PF < 0.95, and power "
+            "transformers must carry excess current — increasing copper and iron losses by up to 21%."
+        ),
+        "hybrid_action": (
+            "Switch to battery-backed inverter mode to supply reactive power locally. "
+            "Battery inverters can inject reactive current at PF = 1.0, eliminating reactive import from grid."
+        )
+    },
+    "HVAC Inefficiency": {
+        "basis": "ASHRAE 90.1-2019: Minimum Energy Performance Standards for Buildings",
+        "significance": (
+            "HVAC typically accounts for 40-60% of a building's energy consumption. "
+            "Running ACs below 24°C outdoor setpoint violates the economiser mandate — "
+            "free cooling via outdoor air or mixed-mode ventilation should be used instead. "
+            "Every 1°C thermostat setback saves approximately 3-5% HVAC energy (ISHRAE standard)."
+        ),
+        "hybrid_action": (
+            "Activate economiser mode; use solar power for residual HVAC load during daytime. "
+            "Load shift HVAC pre-cooling to solar peak hours (10 AM – 3 PM) to zero grid import."
+        )
+    },
+    "Idle Load / Empty Room Waste": {
+        "basis": "IEA (International Energy Agency) — Zero Energy Building (ZEB) Protocol",
+        "significance": (
+            "Phantom / standby loads in unoccupied rooms represent 5-15% of total campus energy "
+            "with zero productive output. This includes computers in sleep-but-powered mode (~50W each), "
+            "ballast lighting (~20W/tube), and fan motors running on timer circuits after occupants leave."
+        ),
+        "hybrid_action": (
+            "Activate IoT occupancy-linked relay circuit. "
+            "Idle loads can be cut entirely via smart MCBs, reducing wasted kWh with no operational impact. "
+            "Battery covers standby server and security systems during idle periods."
+        )
+    },
+    "Peak Load Surge > 1.5x Median": {
+        "basis": "CEA (Central Electricity Authority) Demand Side Management Regulations 2022",
+        "significance": (
+            "Peak demand sets the Demand Charge (₹/kW/month) billed by the utility — "
+            "the single largest controllable cost for large consumers. A spike 1.5x above the "
+            "median baseline indicates simultaneous coincident loads (labs + ACs + computers all ON together). "
+            "Reducing the 15-minute peak average by 10 kW saves ₹15,000-25,000/month at standard DISCOm tariffs."
+        ),
+        "hybrid_action": (
+            "Engage battery discharge at peak. Battery can supply 30 kW for 4 hours. "
+            "Load sharing: Route 30% of Workshop Building load to Block D feeder during surge hours. "
+            "Alert energy manager to manually shed non-critical AC units in vacant floors."
+        )
+    }
+}
 
 def render_alerts() -> None:
-    """Renders the Smart Alerts dashboard in Streamlit."""
-    st.header("🔔 Operational Smart Alerts")
-    st.write("Campus-wide telemetry watchdogs monitoring equipment leaks, power quality issues, and load surges.")
-    
-    alert_service = AlertService()
-    alerts = alert_service.scan_for_alerts()
-    
-    # 1. Summary Statistics Cards
-    tot_alerts = len(alerts)
-    crit_alerts = len([a for a in alerts if a["Severity"] == "Critical"])
-    warn_alerts = len([a for a in alerts if a["Severity"] == "Warning"])
-    
-    c_tot, c_crit, c_warn = st.columns(3)
-    c_tot.metric("Total Active Alerts", tot_alerts)
-    c_crit.metric("Critical Alerts", crit_alerts, delta_color="inverse")
-    c_warn.metric("Warning Alerts", warn_alerts)
-    
+    alert_svc = AlertService()
+    data_svc  = DataService()
+    df = data_svc.load_dataset()
+
+    alerts = alert_svc.scan_for_alerts()
+    settings = data_svc.settings_manager.load_settings()
+
+    # ── Section Header ─────────────────────────────────────────────────────────
+    st.markdown("""
+    <div style="padding:20px 0 4px 0;">
+      <div style="font-size:1.5rem;font-weight:800;color:#0F172A;">🔔 Smart Operational Alerts</div>
+      <div style="color:#94A3B8;font-size:0.82rem;">
+        Decision-oriented alerts for hybrid energy management and campus load sharing
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # ── Summary Metric Row ─────────────────────────────────────────────────────
+    crit_alerts = [a for a in alerts if a["Severity"] == "Critical"]
+    warn_alerts = [a for a in alerts if a["Severity"] == "Warning"]
+
+    c1, c2, c3, c4 = st.columns(4, gap="medium")
+    with c1:
+        st.markdown(f"""
+        <div class="kpi-card" style="border-top:3px solid #EF4444;">
+          <div style="font-size:0.75rem;color:#94A3B8;font-weight:600;text-transform:uppercase;">
+            Total Active Alerts
+          </div>
+          <div style="font-size:2.2rem;font-weight:800;color:#0F172A;">{len(alerts)}</div>
+        </div>""", unsafe_allow_html=True)
+    with c2:
+        st.markdown(f"""
+        <div class="kpi-card" style="border-top:3px solid #EF4444;">
+          <div style="font-size:0.75rem;color:#94A3B8;font-weight:600;text-transform:uppercase;">
+            Critical Alerts
+          </div>
+          <div style="font-size:2.2rem;font-weight:800;color:#EF4444;">{len(crit_alerts)}</div>
+        </div>""", unsafe_allow_html=True)
+    with c3:
+        st.markdown(f"""
+        <div class="kpi-card" style="border-top:3px solid #F59E0B;">
+          <div style="font-size:0.75rem;color:#94A3B8;font-weight:600;text-transform:uppercase;">
+            Warning Alerts
+          </div>
+          <div style="font-size:2.2rem;font-weight:800;color:#F59E0B;">{len(warn_alerts)}</div>
+        </div>""", unsafe_allow_html=True)
+    with c4:
+        # Estimate daily cost impact
+        tariff = settings.get("electricity_tariff")
+        waste_kw = sum(
+            float(a["Parameter"].split("Energy: ")[-1].split(" kW")[0])
+            for a in crit_alerts if "Energy:" in a["Parameter"]
+        ) if crit_alerts else 0
+        daily_waste_cost = round(waste_kw * tariff, 0)
+        st.markdown(f"""
+        <div class="kpi-card" style="border-top:3px solid #10B981;">
+          <div style="font-size:0.75rem;color:#94A3B8;font-weight:600;text-transform:uppercase;">
+            Est. Daily Cost at Risk
+          </div>
+          <div style="font-size:2.2rem;font-weight:800;color:#10B981;">₹{daily_waste_cost:,.0f}</div>
+        </div>""", unsafe_allow_html=True)
+
     st.markdown("---")
-    
-    # 2. Filter Alerts
-    st.subheader("Filter Active Alerts")
-    col_af1, col_af2, col_af3 = st.columns(3)
-    
-    with col_af1:
-        severities = ["All", "Critical", "Warning"]
-        selected_severity = st.selectbox("Filter by Severity", options=severities)
-        
-    with col_af2:
-        buildings = ["All"] + sorted(list(set(a["Building"] for a in alerts)))
-        selected_building = st.selectbox("Filter by Building", options=buildings)
-        
-    with col_af3:
-        categories = ["All"] + sorted(list(set(a["Category"] for a in alerts)))
-        selected_category = st.selectbox("Filter by Category", options=categories)
-        
-    # Apply filters
-    filtered_alerts = alerts
-    if selected_severity != "All":
-        filtered_alerts = [a for a in filtered_alerts if a["Severity"] == selected_severity]
-    if selected_building != "All":
-        filtered_alerts = [a for a in filtered_alerts if a["Building"] == selected_building]
-    if selected_category != "All":
-        filtered_alerts = [a for a in filtered_alerts if a["Category"] == selected_category]
-        
-    # 3. Render Alerts Table / Cards
-    if not filtered_alerts:
-        st.success("✅ No active alerts matching the selected filters. Operations are operating within safe bounds.")
-        return
-        
-    st.write(f"Showing {len(filtered_alerts)} active alerts:")
-    
-    for alert in filtered_alerts:
-        sev_color = "#E53E3E" if alert["Severity"] == "Critical" else "#DD6B20"
-        bg_color = "#FFF5F5" if alert["Severity"] == "Critical" else "#FFFAF0"
-        
-        st.markdown(
-            f"""
-            <div style="background-color: {bg_color}; border-left: 5px solid {sev_color}; padding: 16px; border-radius: 8px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-                    <span style="font-weight: 700; color: {sev_color}; text-transform: uppercase; font-size: 0.85rem;">
-                        [{alert['Severity']}] {alert['Category']}
-                    </span>
-                    <span style="font-size: 0.75rem; color: #718096; font-weight: 500;">
-                        🕒 {alert['Timestamp']}
-                    </span>
+
+    # ── Threshold Scientific Basis (Expandable) ────────────────────────────────
+    with st.expander("📐 Threshold Basis & Scientific Rationale — Why these thresholds?", expanded=False):
+        for thresh_name, details in THRESHOLD_RATIONALE.items():
+            st.markdown(f"""
+            <div style="background:#F8FAFC;border-radius:10px;padding:16px;margin-bottom:14px;
+                        border-left:4px solid #3B82F6;">
+              <div style="font-size:0.95rem;font-weight:700;color:#0F172A;margin-bottom:6px;">
+                🎯 {thresh_name}
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                <div>
+                  <div style="font-size:0.72rem;color:#3B82F6;font-weight:700;
+                               text-transform:uppercase;margin-bottom:4px;">
+                    Standard / Basis
+                  </div>
+                  <div style="font-size:0.8rem;color:#475569;line-height:1.5;">
+                    {details['basis']}
+                  </div>
                 </div>
-                <div style="font-size: 0.95rem; color: #2D3748; margin-bottom: 8px; line-height: 1.5;">
-                    {alert['Message']}
+                <div>
+                  <div style="font-size:0.72rem;color:#10B981;font-weight:700;
+                               text-transform:uppercase;margin-bottom:4px;">
+                    Engineering Significance
+                  </div>
+                  <div style="font-size:0.8rem;color:#475569;line-height:1.5;">
+                    {details['significance']}
+                  </div>
                 </div>
-                <div style="display: flex; gap: 15px; font-size: 0.8rem; color: #4A5568; font-weight: 500;">
-                    <span>📍 Building: <b>{alert['Building']}</b> (Hour: {alert['Hour']})</span>
-                    <span>📊 Read Parameter: <b>{alert['Parameter']}</b></span>
-                    <span>🎯 Limit: <b>{alert['Threshold']}</b></span>
+              </div>
+              <div style="margin-top:10px;background:#EFF6FF;border-radius:6px;padding:10px;">
+                <div style="font-size:0.72rem;color:#1D4ED8;font-weight:700;
+                             text-transform:uppercase;margin-bottom:3px;">
+                  ⚡ Hybrid Energy / Load Sharing Action
                 </div>
+                <div style="font-size:0.8rem;color:#1E40AF;line-height:1.5;">
+                  {details['hybrid_action']}
+                </div>
+              </div>
             </div>
-            """,
-            unsafe_allow_html=True
-        )
+            """, unsafe_allow_html=True)
+
+    st.markdown("---")
+
+    # ── Filters ────────────────────────────────────────────────────────────────
+    st.markdown("""
+    <div style="font-size:1.0rem;font-weight:700;color:#0F172A;margin-bottom:8px;">
+      Filter Active Alerts
+    </div>""", unsafe_allow_html=True)
+
+    col_f1, col_f2, col_f3 = st.columns(3, gap="medium")
+    with col_f1:
+        sev_filter  = st.selectbox("Severity", ["All","Critical","Warning"], key="alert_sev")
+    with col_f2:
+        bldg_opts   = ["All"] + sorted(set(a["Building"] for a in alerts))
+        bldg_filter = st.selectbox("Building",  bldg_opts, key="alert_bldg")
+    with col_f3:
+        cat_opts    = ["All"] + sorted(set(a["Category"] for a in alerts))
+        cat_filter  = st.selectbox("Category", cat_opts, key="alert_cat")
+
+    filtered = alerts
+    if sev_filter  != "All": filtered = [a for a in filtered if a["Severity"] == sev_filter]
+    if bldg_filter != "All": filtered = [a for a in filtered if a["Building"] == bldg_filter]
+    if cat_filter  != "All": filtered = [a for a in filtered if a["Category"] == cat_filter]
+
+    if not filtered:
+        st.success("✅ No alerts match the selected filters. Campus operating within safe bounds.")
+        return
+
+    st.markdown(f"""
+    <div style="font-size:0.82rem;color:#64748B;margin:8px 0 16px 0;">
+      Showing <b>{len(filtered)}</b> active alert(s)
+    </div>""", unsafe_allow_html=True)
+
+    # ── Alert Cards ────────────────────────────────────────────────────────────
+    for alert in filtered:
+        sev    = alert["Severity"]
+        cat    = alert["Category"]
+        bldg   = alert["Building"]
+        hour   = alert["Hour"]
+        msg    = alert["Message"]
+        param  = alert["Parameter"]
+        thresh = alert["Threshold"]
+        ts     = alert["Timestamp"]
+
+        sev_color = "#EF4444" if sev == "Critical" else "#F59E0B"
+        bg_color  = "#FFF5F5" if sev == "Critical" else "#FFFBEB"
+
+        # ── Decision support block based on category ───────────────────────────
+        if cat == "Electrical":
+            decision = (
+                "🔌 <b>Load Sharing Decision:</b> Install APFC capacitor bank at building feeder. "
+                "Alternatively, switch inverter-battery to reactive power compensation mode (Q-control). "
+                "Prioritise this building for capacitor bank in next maintenance cycle."
+            )
+            hybrid_action = (
+                "⚡ <b>Hybrid Action:</b> Battery inverter can supply reactive power locally at zero cost. "
+                "Enable Q-mode on the building's UPS/inverter to correct PF to ≥0.95 immediately."
+            )
+        elif cat == "HVAC Inefficiency":
+            decision = (
+                "❄️ <b>Load Sharing Decision:</b> If adjoining building has unused cooling capacity, "
+                "redistribute occupants temporarily. Schedule a thermostat setback of +2°C on all AC units in this block."
+            )
+            hybrid_action = (
+                "☀️ <b>Hybrid Action:</b> Pre-cool building using solar power during 10 AM–2 PM window. "
+                "Disconnect grid HVAC during solar peak; battery tops up during cloud cover. "
+                "This alone reduces grid HVAC import by up to 60% on clear days."
+            )
+        elif cat == "Idle Waste":
+            decision = (
+                "🏢 <b>Load Sharing Decision:</b> No active occupants to shift. "
+                "Issue immediate shutdown directive to building operations staff. "
+                "Enable smart relay circuit to cut all non-essential loads automatically."
+            )
+            hybrid_action = (
+                "🔋 <b>Hybrid Action:</b> Switch idle floor circuits to battery supply only. "
+                "This isolates the wasted load from grid import, reducing billed units without physical shutdown."
+            )
+        else:
+            decision = (
+                "📊 <b>Load Sharing Decision:</b> Identify which departments are running coincident loads. "
+                "Stagger laboratory sessions by 30 minutes to flatten the demand curve and avoid peak billing."
+            )
+            hybrid_action = (
+                "⚡ <b>Hybrid Action:</b> Activate battery discharge during the surge window. "
+                f"Battery can supply 30 kW for 4 hours — enough to shave the peak at Hour {hour} entirely."
+            )
+
+        # Compute potential savings
+        pf_val = df[df["Building"]==bldg]["Power Factor"].mean()
+        energy_val = df[df["Building"]==bldg]["Energy Consumption"].mean()
+        tariff_rate = settings.get("electricity_tariff")
+        carbon_factor = settings.get("carbon_factor")
+        est_daily_savings = round(energy_val * 0.1 * tariff_rate, 2)
+        est_carbon_saved  = round(energy_val * 0.1 * carbon_factor, 2)
+
+        st.markdown(f"""
+        <div style="background:{bg_color};border:1px solid {sev_color}33;border-left:5px solid {sev_color};
+                    border-radius:10px;padding:18px;margin-bottom:16px;">
+
+          <!-- Header Row -->
+          <div style="display:flex;justify-content:space-between;
+                      align-items:flex-start;margin-bottom:10px;">
+            <div>
+              <span style="background:{sev_color};color:white;font-size:0.7rem;font-weight:700;
+                           padding:2px 10px;border-radius:20px;text-transform:uppercase;">
+                {sev}
+              </span>
+              <span style="background:#F1F5F9;color:#475569;font-size:0.7rem;font-weight:600;
+                           padding:2px 10px;border-radius:20px;margin-left:6px;">
+                {cat}
+              </span>
+            </div>
+            <span style="font-size:0.72rem;color:#94A3B8;">🕒 {ts}</span>
+          </div>
+
+          <!-- Main Message -->
+          <div style="font-size:0.92rem;font-weight:600;color:#0F172A;margin-bottom:6px;">
+            {msg}
+          </div>
+
+          <!-- Telemetry Row -->
+          <div style="display:flex;gap:16px;font-size:0.78rem;color:#64748B;margin-bottom:12px;">
+            <span>📍 <b>{bldg}</b></span>
+            <span>⏰ Hour: <b>{hour}:00</b></span>
+            <span>📊 Reading: <b>{param}</b></span>
+            <span>🎯 Threshold: <b>{thresh}</b></span>
+          </div>
+
+          <!-- Decision + Hybrid Grid -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+            <div style="background:white;border-radius:8px;padding:12px;
+                        border:1px solid #E2E8F0;">
+              <div style="font-size:0.7rem;color:#475569;font-weight:700;
+                           text-transform:uppercase;margin-bottom:4px;">
+                Management Decision
+              </div>
+              <div style="font-size:0.8rem;color:#374151;line-height:1.5;">
+                {decision}
+              </div>
+            </div>
+            <div style="background:#EFF6FF;border-radius:8px;padding:12px;
+                        border:1px solid #DBEAFE;">
+              <div style="font-size:0.7rem;color:#1D4ED8;font-weight:700;
+                           text-transform:uppercase;margin-bottom:4px;">
+                Hybrid Energy Action
+              </div>
+              <div style="font-size:0.8rem;color:#1E40AF;line-height:1.5;">
+                {hybrid_action}
+              </div>
+            </div>
+          </div>
+
+          <!-- Financial Impact -->
+          <div style="display:flex;gap:20px;font-size:0.78rem;background:white;
+                      border-radius:8px;padding:10px 14px;border:1px solid #E2E8F0;">
+            <span>💰 Est. Daily Saving if resolved:
+              <b style="color:#059669;">₹{est_daily_savings:,.2f}</b>
+            </span>
+            <span>🌱 Carbon Offset:
+              <b style="color:#059669;">{est_carbon_saved:.2f} kg CO₂/day</b>
+            </span>
+            <span>📉 Energy Reduction Potential:
+              <b style="color:#3B82F6;">~10%</b>
+            </span>
+          </div>
+        </div>
+        """, unsafe_allow_html=True)
