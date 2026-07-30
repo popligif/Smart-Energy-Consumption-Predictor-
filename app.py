@@ -65,14 +65,13 @@ section[data-testid="stSidebar"] .stRadio div[data-testid="stMarkdownContainer"]
 
 /* Stunning KPI Cards with Micro-animations */
 .kpi-card {
-    background: rgba(255, 255, 255, 0.9);
-    backdrop-filter: blur(12px);
+    background: rgba(255, 255, 255, 0.98);
     border-radius: 20px;
     padding: 24px;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-    border: 1px solid rgba(255,255,255,0.8);
+    border: 1px solid rgba(226, 232, 240, 0.8);
     height: 100%;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
     position: relative;
     overflow: hidden;
 }

@@ -217,9 +217,16 @@ def render_alerts() -> None:
     <div style="font-size:0.82rem;color:#64748B;margin:8px 0 16px 0;">
       Showing <b>{len(filtered)}</b> active alert(s)
     </div>""", unsafe_allow_html=True)
+    
+    MAX_ALERTS_RENDER = 15
+    if len(filtered) > MAX_ALERTS_RENDER:
+        st.info(f"⚡ To ensure optimal performance, only the latest {MAX_ALERTS_RENDER} alerts are displayed. Use filters to narrow down.")
+        display_alerts = filtered[:MAX_ALERTS_RENDER]
+    else:
+        display_alerts = filtered
 
     # ── Alert Cards ────────────────────────────────────────────────────────────
-    for alert in filtered:
+    for alert in display_alerts:
         sev    = alert["Severity"]
         cat    = alert["Category"]
         bldg   = alert["Building"]
