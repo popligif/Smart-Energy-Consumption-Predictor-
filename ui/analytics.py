@@ -58,6 +58,14 @@ def _precompute_analytics(csv_path: str):
     
     return bldg_avg, hourly_total, total_live_kw, dist_totals, bldg_hourly, top_rows, corr_df
 
+def _hex_to_rgba(hex_color: str, alpha: float = 0.7) -> str:
+    """Converts #RRGGBB to rgba(r,g,b,a) for valid Plotly fillcolor."""
+    try:
+        r, g, b = int(hex_color[1:3],16), int(hex_color[3:5],16), int(hex_color[5:7],16)
+        return f"rgba({r},{g},{b},{alpha})"
+    except Exception:
+        return f"rgba(59,130,246,{alpha})"
+
 def render_analytics() -> None:
     data_svc  = DataService()
     analytics  = AnalyticsService()
