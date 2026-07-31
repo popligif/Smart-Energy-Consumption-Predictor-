@@ -112,9 +112,17 @@ section[data-testid="stSidebar"] .stRadio div[data-testid="stMarkdownContainer"]
 .delta-down { color: #EF4444; font-weight: 700; font-size: 0.85rem; background: #FEF2F2; padding: 2px 8px; border-radius: 12px; }
 .metric-val { font-size: 2.4rem; font-weight: 800; color: #022C22; line-height: 1.1; letter-spacing: -0.02em; }
 .metric-sub { font-size: 0.85rem; color: #64748B; margin-top: 4px; font-weight: 500; }
+    /* Fade-in page transition */
+    .fade-page {
+        animation: fadeIn 0.4s ease-in-out;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
 
-/* Fix Streamlit defaults */
-button[title="View fullscreen"] { display: none; }
+    /* Fix Streamlit defaults */
+    button[title="View fullscreen"] { display: none; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -291,27 +299,59 @@ with st.container():
 # ── Router ────────────────────────────────────────────────────────────────────
 try:
     if selected_page == "🏛️ Executive Decision Centre":
-        render_dashboard()
+        with st.container():
+            st.markdown('<div class="fade-page">', unsafe_allow_html=True)
+            render_dashboard()
+            st.markdown('</div>', unsafe_allow_html=True)
     elif selected_page == "🏢 Building Drill-Down":
-        render_building_drilldown()
+        with st.container():
+            st.markdown('<div class="fade-page">', unsafe_allow_html=True)
+            render_building_drilldown()
+            st.markdown('</div>', unsafe_allow_html=True)
     elif selected_page == "⚡ Energy Analytics":
-        render_analytics()
+        with st.container():
+            st.markdown('<div class="fade-page">', unsafe_allow_html=True)
+            render_analytics()
+            st.markdown('</div>', unsafe_allow_html=True)
     elif selected_page == "🔮 Scenario Simulator":
-        render_simulator()
+        with st.container():
+            st.markdown('<div class="fade-page">', unsafe_allow_html=True)
+            render_simulator()
+            st.markdown('</div>', unsafe_allow_html=True)
     elif selected_page == "🔌 Load Optimization":
-        render_load_optimization()
+        with st.container():
+            st.markdown('<div class="fade-page">', unsafe_allow_html=True)
+            render_load_optimization()
+            st.markdown('</div>', unsafe_allow_html=True)
     elif selected_page == "💡 AI Recommendations":
-        render_recommendations()
+        with st.container():
+            st.markdown('<div class="fade-page">', unsafe_allow_html=True)
+            render_recommendations()
+            st.markdown('</div>', unsafe_allow_html=True)
     elif selected_page == "🔔 Smart Alerts":
-        render_alerts()
+        with st.container():
+            st.markdown('<div class="fade-page">', unsafe_allow_html=True)
+            render_alerts()
+            st.markdown('</div>', unsafe_allow_html=True)
     elif selected_page == "🔍 Telemetry Explorer":
-        render_dataset_explorer()
+        with st.container():
+            st.markdown('<div class="fade-page">', unsafe_allow_html=True)
+            render_dataset_explorer()
+            st.markdown('</div>', unsafe_allow_html=True)
     elif selected_page == "📄 Executive Report":
-        render_reports()
+        with st.container():
+            st.markdown('<div class="fade-page">', unsafe_allow_html=True)
+            render_reports()
+            st.markdown('</div>', unsafe_allow_html=True)
     elif selected_page == "⚙️ Settings":
-        render_settings()
+        with st.container():
+            st.markdown('<div class="fade-page">', unsafe_allow_html=True)
+            render_settings()
+            st.markdown('</div>', unsafe_allow_html=True)
     elif selected_page == "🔮 Future Integrations":
-        render_future_works()
+        with st.container():
+            st.markdown('<div class="fade-page">', unsafe_allow_html=True)
+            render_future_works()
+            st.markdown('</div>', unsafe_allow_html=True)
 except Exception as e:
-    st.error(f"🛑 Application Error: {e}")
-    st.exception(e)
+    st.error(f"Page rendering error: {e}")
