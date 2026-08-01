@@ -64,6 +64,17 @@ def render_guide():
                     ]
                 },
                 {
+                    "icon": "🔮",
+                    "name": "Energy Forecasting",
+                    "key": "📈 Energy Forecasting",
+                    "features": [
+                        "Next-hour demand prediction with dynamic confidence bounds",
+                        "Next 24 hours load profile forecasting",
+                        "Next 7 days aggregated energy usage estimates",
+                        "Next 30 days monthly indicative trends based on actual hourly 3-phase telemetry",
+                    ]
+                },
+                {
                     "icon": "🔍",
                     "name": "Telemetry Explorer",
                     "key": "🔍 Telemetry Explorer",
@@ -174,9 +185,9 @@ def render_guide():
 
     # ── Role access matrix ────────────────────────────────────────────────────
     ROLE_PAGES = {
-        "Director":           ["🏛️ Executive Decision Centre","🏢 Building Drill-Down","⚡ Energy Analytics","💡 AI Recommendations","🔔 Smart Alerts","📄 Executive Report","⚙️ Settings","🗺️ System Guide"],
-        "Energy Manager":     ["🏛️ Executive Decision Centre","🏢 Building Drill-Down","⚡ Energy Analytics","🔮 Scenario Simulator","🔌 Load Optimization","💡 AI Recommendations","🔔 Smart Alerts","📄 Executive Report","⚙️ Settings","🗺️ System Guide"],
-        "Electrical Engineer":["🏛️ Executive Decision Centre","🏢 Building Drill-Down","⚡ Energy Analytics","🔮 Scenario Simulator","🔌 Load Optimization","🔍 Telemetry Explorer","⚙️ Settings","🗺️ System Guide"],
+        "Director":           ["🏛️ Executive Decision Centre","🏢 Building Drill-Down","⚡ Energy Analytics","📈 Energy Forecasting","💡 AI Recommendations","🔔 Smart Alerts","📄 Executive Report","⚙️ Settings","🗺️ System Guide"],
+        "Energy Manager":     ["🏛️ Executive Decision Centre","🏢 Building Drill-Down","⚡ Energy Analytics","📈 Energy Forecasting","🔮 Scenario Simulator","🔌 Load Optimization","💡 AI Recommendations","🔔 Smart Alerts","📄 Executive Report","⚙️ Settings","🗺️ System Guide"],
+        "Electrical Engineer":["🏛️ Executive Decision Centre","🏢 Building Drill-Down","⚡ Energy Analytics","📈 Energy Forecasting","🔮 Scenario Simulator","🔌 Load Optimization","🔍 Telemetry Explorer","⚙️ Settings","🗺️ System Guide"],
         "Administrator":      None,  # All pages
     }
 
