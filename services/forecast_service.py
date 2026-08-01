@@ -4,13 +4,8 @@ using new 3-phase sensor dataset (29 days, 14 devices, ~7s interval).
 
 Uses sklearn GradientBoostingRegressor (no extra dependencies needed).
 
-Horizons:
-  - Next 1 hour
-  - Next 24 hours (hourly profile)
-  - Next 7 days   (daily totals)
-  - Next 30 days  (monthly indicative)
-
-Performance: everything cached via st.cache_data / st.cache_resource.
+Optimized for ultra-fast execution (pure NumPy/list buffers, no DataFrame overhead).
+Single 720-step recursive forecast loop instead of repeating loops.
 """
 import os
 import numpy as np
@@ -129,9 +124,9 @@ def get_trained_models(path: str = NEW_DATASET_PATH):
         subsample=0.85,
         random_state=42,
     )
-    model.fit(X_train, y_train)
+    model.fit(X_train.values, y_train.values)
 
-    preds  = model.predict(X_test)
+    preds  = model.predict(X_test.values)
     errors = np.abs(preds - y_test.values)
     mae    = float(np.mean(errors))
     mape   = float(np.mean(errors / (np.abs(y_test.values) + 1e-6)) * 100)
@@ -146,145 +141,140 @@ def get_trained_models(path: str = NEW_DATASET_PATH):
     }
 
 
-# ── Step 4: Prediction helpers ────────────────────────────────────────────────
-def _make_future_row(last_row, target_dt):
-    """Build feature row for a future timestamp."""
-    h   = target_dt.hour
-    dow = target_dt.weekday()
-    return {
-        "hour": h, "dow": dow, "is_weekend": int(dow >= 5),
-        "hour_sin": np.sin(2 * np.pi * h / 24),
-        "hour_cos": np.cos(2 * np.pi * h / 24),
-        "dow_sin":  np.sin(2 * np.pi * dow / 7),
-        "dow_cos":  np.cos(2 * np.pi * dow / 7),
-        "lag_1h":           last_row.get("lag_1h", last_row["y"]),
-        "lag_2h":           last_row.get("lag_2h", last_row["y"]),
-        "lag_3h":           last_row.get("lag_3h", last_row["y"]),
-        "lag_24h":          last_row.get("lag_24h", last_row["y"]),
-        "lag_48h":          last_row.get("lag_48h", last_row["y"]),
-        "lag_168h":         last_row.get("lag_168h", last_row["y"]),
-        "rolling_mean_6h":  last_row.get("rolling_mean_6h", last_row["y"]),
-        "rolling_mean_24h": last_row.get("rolling_mean_24h", last_row["y"]),
-        "rolling_std_6h":   last_row.get("rolling_std_6h", 0),
-    }
-
-
+# ── Step 4: Optimized forecast generator (single-pass recursive loop) ─────────
 @st.cache_data(ttl=300, show_spinner=False)
-def predict_next_hour() -> dict:
-    """Returns next-hour kW prediction + confidence interval."""
+def generate_all_forecasts() -> dict:
+    """
+    Runs a single 720-step (30-day) recursive forecast loop using fast
+    list buffers. Returns a dict containing the generated predictions
+    for all four horizons (hour, 24h, 7d, 30d).
+    """
     res   = get_trained_models()
     model = res["model"]
     feats = res["features"]
     mae   = res["mae"]
 
-    last_row = feats.iloc[-1]
-    last_ts  = feats.index[-1]
-    next_ts  = last_ts + timedelta(hours=1)
-    row      = _make_future_row(last_row, next_ts)
+    # Extract indices of lag features to align from our rolling list
+    last_ts = feats.index[-1]
+    
+    hourly = res["hourly"]
+    y_seed = list(hourly["y"].values[-168:])
+    
+    # Pre-calculate time lists for speed
+    future_timestamps = [last_ts + timedelta(hours=i) for i in range(1, 721)]
+    
+    predictions = []
+    
+    # Quick numpy-friendly rolling standard deviation helper
+    def fast_std(vals):
+        return float(np.std(vals))
 
-    pred = max(0, float(model.predict(pd.DataFrame([row])[FEATURE_COLS])[0]))
-    return {
-        "timestamp":    next_ts,
-        "predicted_kw": round(pred, 1),
-        "lower_kw":     round(max(0, pred - 1.5 * mae), 1),
-        "upper_kw":     round(pred + 1.5 * mae, 1),
+    for i, ts in enumerate(future_timestamps):
+        h   = ts.hour
+        dow = ts.weekday()
+        is_weekend = int(dow >= 5)
+        
+        h_sin = np.sin(2 * np.pi * h / 24)
+        h_cos = np.cos(2 * np.pi * h / 24)
+        d_sin = np.sin(2 * np.pi * dow / 7)
+        d_cos = np.cos(2 * np.pi * dow / 7)
+        
+        # Get lags from rolling buffer
+        lag_1 = y_seed[-1]
+        lag_2 = y_seed[-2]
+        lag_3 = y_seed[-3]
+        lag_24 = y_seed[-24]
+        lag_48 = y_seed[-48]
+        lag_168 = y_seed[-168]
+        
+        # Get rolling mean / std
+        roll_6_mean = sum(y_seed[-6:]) / 6.0
+        roll_24_mean = sum(y_seed[-24:]) / 24.0
+        roll_6_std = fast_std(y_seed[-6:])
+        
+        # Construct feature vector
+        feats_vec = [
+            h, dow, is_weekend, h_sin, h_cos, d_sin, d_cos,
+            lag_1, lag_2, lag_3, lag_24, lag_48, lag_168,
+            roll_6_mean, roll_24_mean, roll_6_std
+        ]
+        
+        # Fast prediction
+        pred = max(0.0, float(model.predict([feats_vec])[0]))
+        predictions.append(pred)
+        
+        # Append to rolling buffer
+        y_seed.append(pred)
+        
+        # Keep buffer size compact (168 seeds + future predictions)
+        if len(y_seed) > 1000:
+            y_seed.pop(0)
+
+    # ── Horizon 1: Next Hour ──
+    next_hour_pred = predictions[0]
+    next_hour_ts = future_timestamps[0]
+    next_hour_dict = {
+        "timestamp":    next_hour_ts,
+        "predicted_kw": round(next_hour_pred, 1),
+        "lower_kw":     round(max(0, next_hour_pred - 1.5 * mae), 1),
+        "upper_kw":     round(next_hour_pred + 1.5 * mae, 1),
         "mae":          round(mae, 1),
         "mape":         round(res["mape"], 1),
     }
 
-
-@st.cache_data(ttl=300, show_spinner=False)
-def predict_next_24h() -> pd.DataFrame:
-    """Returns 24-hour forecast DataFrame."""
-    res   = get_trained_models()
-    model = res["model"]
-    feats = res["features"]
-    mae   = res["mae"]
-
-    last_row = feats.iloc[-1].copy()
-    last_ts  = feats.index[-1]
-    records  = []
-
-    for i in range(1, 25):
-        ts   = last_ts + timedelta(hours=i)
-        row  = _make_future_row(last_row, ts)
-        pred = max(0, float(model.predict(pd.DataFrame([row])[FEATURE_COLS])[0]))
-        records.append({
-            "timestamp":    ts,
-            "predicted_kw": round(pred, 1),
-            "lower_kw":     round(max(0, pred - 1.5 * mae), 1),
-            "upper_kw":     round(pred + 1.5 * mae, 1),
+    # ── Horizon 2: Next 24 Hours ──
+    next_24h_records = []
+    for idx in range(24):
+        p = predictions[idx]
+        next_24h_records.append({
+            "timestamp":    future_timestamps[idx],
+            "predicted_kw": round(p, 1),
+            "lower_kw":     round(max(0, p - 1.5 * mae), 1),
+            "upper_kw":     round(p + 1.5 * mae, 1),
         })
-        last_row = last_row.copy()
-        last_row["lag_1h"] = pred
+    next_24h_df = pd.DataFrame(next_24h_records)
 
-    return pd.DataFrame(records)
+    # ── Horizon 3 & 4: 7 Days & 30 Days ──
+    all_df = pd.DataFrame({
+        "timestamp":    future_timestamps,
+        "predicted_kw": predictions
+    })
+    all_df["date"] = all_df["timestamp"].dt.date
+    
+    # Group by date for daily kWh sum
+    daily_totals = all_df.groupby("date")["predicted_kw"].sum().reset_index()
+    daily_totals = daily_totals.rename(columns={"predicted_kw": "daily_kwh"})
+    daily_totals["lower_kwh"] = (daily_totals["daily_kwh"] - 24 * mae).clip(lower=0)
+    daily_totals["upper_kwh"] = daily_totals["daily_kwh"] + 24 * mae
+
+    # Extract 7 days (including today/first 7 days of predictions)
+    next_7d_df = daily_totals.head(7).copy()
+    next_30d_df = daily_totals.copy()
+
+    return {
+        "next_hour": next_hour_dict,
+        "next_24h":  next_24h_df,
+        "next_7d":   next_7d_df,
+        "next_30d":  next_30d_df
+    }
 
 
-@st.cache_data(ttl=1800, show_spinner=False)
+# ── Step 5: Interface wrappers ────────────────────────────────────────────────
+def predict_next_hour() -> dict:
+    return generate_all_forecasts()["next_hour"]
+
+def predict_next_24h() -> pd.DataFrame:
+    return generate_all_forecasts()["next_24h"]
+
 def predict_next_7days() -> pd.DataFrame:
-    """Returns daily forecast totals for next 7 days."""
-    res   = get_trained_models()
-    model = res["model"]
-    feats = res["features"]
-    mae   = res["mae"]
+    return generate_all_forecasts()["next_7d"]
 
-    last_row = feats.iloc[-1].copy()
-    last_ts  = feats.index[-1]
-    records  = []
-
-    for i in range(1, 169):
-        ts   = last_ts + timedelta(hours=i)
-        row  = _make_future_row(last_row, ts)
-        pred = max(0, float(model.predict(pd.DataFrame([row])[FEATURE_COLS])[0]))
-        records.append({"timestamp": ts, "predicted_kw": pred})
-        last_row = last_row.copy()
-        last_row["lag_1h"] = pred
-
-    df = pd.DataFrame(records)
-    df["date"] = df["timestamp"].dt.date
-    daily = df.groupby("date")["predicted_kw"].sum().reset_index()
-    daily = daily.rename(columns={"predicted_kw": "daily_kwh"})
-    daily["lower_kwh"] = (daily["daily_kwh"] - 24 * mae).clip(lower=0)
-    daily["upper_kwh"] = daily["daily_kwh"] + 24 * mae
-    return daily
-
-
-@st.cache_data(ttl=3600, show_spinner=False)
 def predict_next_30days() -> pd.DataFrame:
-    """Returns indicative monthly forecast — daily totals for 30 days."""
-    res   = get_trained_models()
-    model = res["model"]
-    feats = res["features"]
-    mae   = res["mae"]
-
-    last_row = feats.iloc[-1].copy()
-    last_ts  = feats.index[-1]
-    records  = []
-
-    for i in range(1, 721):
-        ts   = last_ts + timedelta(hours=i)
-        row  = _make_future_row(last_row, ts)
-        pred = max(0, float(model.predict(pd.DataFrame([row])[FEATURE_COLS])[0]))
-        records.append({"timestamp": ts, "predicted_kw": pred})
-        last_row = last_row.copy()
-        last_row["lag_1h"] = pred
-
-    df = pd.DataFrame(records)
-    df["date"] = df["timestamp"].dt.date
-    daily = df.groupby("date")["predicted_kw"].sum().reset_index()
-    daily = daily.rename(columns={"predicted_kw": "daily_kwh"})
-    daily["lower_kwh"] = (daily["daily_kwh"] - 24 * mae).clip(lower=0)
-    daily["upper_kwh"] = daily["daily_kwh"] + 24 * mae
-    return daily
-
+    return generate_all_forecasts()["next_30d"]
 
 def get_model_metrics() -> dict:
-    """Returns MAE and MAPE of the trained model."""
     res = get_trained_models()
     return {"mae": res["mae"], "mape": res["mape"]}
 
-
 def get_historical_hourly() -> pd.DataFrame:
-    """Returns the processed hourly campus kW series for overlays."""
     return load_hourly_campus_kw()

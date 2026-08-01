@@ -64,6 +64,12 @@ def inject_styles():
         cursor: pointer;
         border: 1px solid transparent;
         margin-bottom: 2px;
+        display: flex;
+        align-items: center;
+    }
+    /* Hide circular input selector */
+    .stRadio > div > label > div:first-child {
+        display: none !important;
     }
     .stRadio > div > label:hover {
         background: rgba(16, 185, 129, 0.15) !important;

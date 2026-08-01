@@ -9,10 +9,6 @@ from services.data_service import DataService
 
 def render_simulator() -> None:
     """Renders the Scenario Simulator tab with sliders, prediction metrics, and model comparisons."""
-    st.header("🔮 Scenario Planning Simulator")
-    st.write("Run what-if scenario analyses to evaluate how operational adjustments affect campus power draws and budgets.")
-    
-    # Initialize ML service
     ml_service = MLService()
     data_service = DataService()
     df = data_service.load_dataset()

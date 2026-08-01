@@ -89,14 +89,7 @@ def render_alerts() -> None:
     settings = data_svc.settings_manager.load_settings()
 
     # ── Section Header ─────────────────────────────────────────────────────────
-    st.markdown("""
-    <div style="padding:20px 0 4px 0;">
-      <div style="font-size:1.5rem;font-weight:800;color:#0F172A;">🔔 Smart Operational Alerts</div>
-      <div style="color:#94A3B8;font-size:0.82rem;">
-        Decision-oriented alerts for hybrid energy management and campus load sharing
-      </div>
-    </div>
-    """, unsafe_allow_html=True)
+
 
     # ── Summary Metric Row ─────────────────────────────────────────────────────
     crit_alerts = [a for a in alerts if a["Severity"] == "Critical"]

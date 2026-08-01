@@ -7,9 +7,6 @@ from services.data_service import DataService
 
 def render_dataset_explorer() -> None:
     """Renders the Dataset Explorer page in Streamlit."""
-    st.header("🔍 Campus Telemetry Explorer")
-    st.write("Browse, search, and audit raw data points collected from MIET smart meters.")
-    
     data_service = DataService()
     df = data_service.load_dataset()
     
