@@ -49,6 +49,30 @@ def render_forecasting():
     lower_kw = next_hour.get('lower_kw', pred_kw * 0.9)
     upper_kw = next_hour.get('upper_kw', pred_kw * 1.1)
 
+    # Dynamic accuracy badges based on standard ML benchmarks
+    if mae < 15.0:
+        mae_badge_text = "Good (<15 kW)"
+        mae_badge_style = "background:#10B98120; color:#10B981;"
+    elif mae < 30.0:
+        mae_badge_text = "Moderate (15-30 kW)"
+        mae_badge_style = "background:#F59E0B20; color:#F59E0B;"
+    else:
+        mae_badge_text = "High (>30 kW)"
+        mae_badge_style = "background:#EF444420; color:#EF4444;"
+
+    if mape < 15.0:
+        mape_badge_text = "High Accuracy (<15%)"
+        mape_badge_style = "background:#10B98120; color:#10B981;"
+    elif mape < 25.0:
+        mape_badge_text = "Good (15-25%)"
+        mape_badge_style = "background:#06B6D420; color:#06B6D4;"
+    elif mape < 35.0:
+        mape_badge_text = "Moderate (25-35%)"
+        mape_badge_style = "background:#F59E0B20; color:#F59E0B;"
+    else:
+        mape_badge_text = "Low Accuracy (>35%)"
+        mape_badge_style = "background:#EF444420; color:#EF4444;"
+
     # ROW 1 - Hero Prediction Panel
     st.markdown(f"""
     <style>
@@ -66,8 +90,7 @@ def render_forecasting():
     .metric-box {{ background: #F1F5F9; border-radius: 0.5rem; padding: 1rem; text-align: left; }}
     .metric-val {{ font-size: 1.5rem; font-weight: 700; color: #0F172A; }}
     .metric-label {{ font-size: 0.75rem; color: #64748B; font-weight: 600; text-transform: uppercase; margin-top: 0.25rem; display: flex; justify-content: space-between; align-items: center; }}
-    .badge-violet {{ background: #8B5CF620; color: #8B5CF6; padding: 0.15rem 0.4rem; border-radius: 0.25rem; font-size: 0.65rem; }}
-    .badge-sky {{ background: #06B6D420; color: #06B6D4; padding: 0.15rem 0.4rem; border-radius: 0.25rem; font-size: 0.65rem; }}
+    .badge-dynamic {{ padding: 0.15rem 0.4rem; border-radius: 0.25rem; font-size: 0.65rem; font-weight: 700; }}
     </style>
     <div class="hero-container">
         <div class="hero-card">
@@ -82,12 +105,12 @@ def render_forecasting():
             <h3 style="color: #64748B; margin: 0 0 1.5rem 0; font-size: 1.1rem; font-weight: 600;">Model Accuracy</h3>
             <div class="metrics-grid">
                 <div class="metric-box">
-                    <div class="metric-val">{mae:.2f}</div>
-                    <div class="metric-label">MAE <span class="badge-violet">Excellent</span></div>
+                    <div class="metric-val">{mae:.1f} <span style="font-size:0.9rem; color:#64748B;">kW</span></div>
+                    <div class="metric-label">MAE <span class="badge-dynamic" style="{mae_badge_style}">{mae_badge_text}</span></div>
                 </div>
                 <div class="metric-box">
                     <div class="metric-val">{mape:.1f}%</div>
-                    <div class="metric-label">MAPE <span class="badge-sky">High Confidence</span></div>
+                    <div class="metric-label">MAPE <span class="badge-dynamic" style="{mape_badge_style}">{mape_badge_text}</span></div>
                 </div>
             </div>
         </div>
