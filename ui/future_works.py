@@ -4,6 +4,15 @@ Future Integrations Page — Displays proposed future R&D modules for the DSS.
 import streamlit as st
 
 def render_future_works() -> None:
+    st.markdown("""
+    <div style="padding:20px 0 4px 0;">
+      <div style="font-size:1.5rem;font-weight:800;color:#0F172A;">🔮 Future Integrations & R&D</div>
+      <div style="color:#94A3B8;font-size:0.82rem;">
+        Upcoming modules and smart automations planned for next phases
+      </div>
+    </div>
+    <hr style="border:none;border-top:1px solid #E2E8F0;margin:10px 0 20px 0;">
+    """, unsafe_allow_html=True)
 
     # Academic Schedule vs Camera Verification Module
     st.markdown("""

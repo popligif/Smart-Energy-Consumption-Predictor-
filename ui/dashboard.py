@@ -162,7 +162,16 @@ def render_dashboard() -> None:
     }
 
     # ── Section Header ────────────────────────────────────────────────────────
-
+    st.markdown("""
+    <div style="padding:20px 0 4px 0;">
+      <div style="font-size:1.5rem;font-weight:800;color:#0F172A;">
+        📊 Executive KPI Dashboard
+      </div>
+      <div style="color:#94A3B8;font-size:0.82rem;">
+        Real-time campus energy performance indicators
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
 
     # ── ROW 1 KPI Cards ───────────────────────────────────────────────────────
     c1, c2, c3, c4 = st.columns(4, gap="medium")
