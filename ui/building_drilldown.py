@@ -7,9 +7,6 @@ from services.data_service import DataService
 from services.alert_service import AlertService
 
 def render_building_drilldown() -> None:
-    st.header("🏢 Building Drill-Down Diagnostics")
-    st.write("Deep-dive analytics for localized facility energy management.")
-    
     data_svc = DataService()
     df = data_svc.load_dataset()
     

@@ -7,11 +7,6 @@ from services.optimization_service import OptimizationService
 
 def render_load_optimization() -> None:
     """Renders the Load Optimization tab in Streamlit."""
-    st.header("🔌 Load Optimization & Scheduling")
-    st.write(
-        "Manage grid strain, avoid peak demand penalties, and optimize thermal appliance runtimes."
-    )
-    
     opt_service = OptimizationService()
     
     tab_shifting, tab_hvac = st.tabs([

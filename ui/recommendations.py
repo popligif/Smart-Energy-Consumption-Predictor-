@@ -20,16 +20,7 @@ def render_recommendations() -> None:
     tot_offset_co2  = sum(r["Annual Carbon Offset (kg CO2)"] for r in recs)
 
     # ── Section header ─────────────────────────────────────────────────────────
-    st.markdown("""
-    <div style="padding:20px 0 4px 0;">
-      <div style="font-size:1.5rem;font-weight:800;color:#0F172A;">
-        💡 AI Energy Recommendation Engine
-      </div>
-      <div style="color:#94A3B8;font-size:0.82rem;">
-        Data-driven, explainable optimisation actions ranked by financial impact
-      </div>
-    </div>
-    """, unsafe_allow_html=True)
+
 
     # ── Savings Banner ─────────────────────────────────────────────────────────
     st.markdown(f"""

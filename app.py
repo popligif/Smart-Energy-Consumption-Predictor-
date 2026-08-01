@@ -82,6 +82,10 @@ try:
         from ui.guide import render_guide
         render_guide()
 
+    elif selected_page == "📈 Energy Forecasting":
+        from ui.forecasting import render_forecasting
+        render_forecasting()
+
 except Exception as e:
     st.error(f"⚠️ Page rendering error on **{selected_page}**: {e}")
     st.exception(e)

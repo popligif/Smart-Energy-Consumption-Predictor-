@@ -6,8 +6,6 @@ from config.settings import ConfigSettings
 
 def render_settings() -> None:
     """Renders the settings calibration dashboard in Streamlit."""
-    st.header("⚙️ Operational Settings & Calibration")
-    st.write("Configure electricity tariffs, carbon indexes, and technical thresholds. Changes propagate instantly.")
     
     settings_manager = ConfigSettings()
     current_settings = settings_manager.load_settings()

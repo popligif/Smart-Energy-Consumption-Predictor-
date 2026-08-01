@@ -7,11 +7,6 @@ from services.report_service import ReportService
 
 def render_reports() -> None:
     """Renders the PDF Report generation UI in Streamlit."""
-    st.header("📄 Executive Audit Reporting")
-    st.write(
-        "Compile and export a formal energy audit report for Meerut Institute of "
-        "Engineering and Technology (MIET). Suitable for submission to the Board or University Director."
-    )
     
     st.markdown(
         """

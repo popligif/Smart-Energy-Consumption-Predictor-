@@ -77,17 +77,7 @@ def render_analytics() -> None:
     df = data_svc.load_dataset()
 
     # ── Section Header ────────────────────────────────────────────────────────
-    st.markdown("""
-    <div class="section-header" style="margin-top:24px;">
-        <div class="section-icon" style="background:#ECFDF5;font-size:1.2rem;">📈</div>
-        <div>
-            <div style="font-size:1.4rem;font-weight:800;color:#0F172A;">Energy Analytics</div>
-            <div style="color:#94A3B8;font-size:0.82rem;">
-                Executive visualisations · auto-refreshing from the synthetic dataset
-            </div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+
 
     SHORT = {
         "Academic Block A": "Block A", "Academic Block B": "Block B",
